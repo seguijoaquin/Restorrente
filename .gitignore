@@ -1,0 +1,46 @@
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.obj
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
+
+# Fortran module files
+*.mod
+*.smod
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+*.lib
+
+# Executables
+*.exe
+*.out
+*.app
+/Debug/
+
+# Clion build
+/.idea/*
+
+#CMAKE files
+CMakeCache.txt
+/CMakeFiles/*
+Makefile
+cmake_install.cmake
+
+#EXE
+resto_simulation_c
+logger.log
+
+#Config
+/src/com/fiuba/resto/config/config.json
