@@ -1,0 +1,11 @@
+{
+  "hosts" : 2,
+  "waiters" : 2,
+  "tables" : 2,
+  "diners_total" : 4,
+  "diners_arribados" : 4,
+  "entrada" : [1,1,1,1],
+  "plato_principal" : [1,1,1,1],
+  "postre" : [1,1,1,1],
+  "bebida" : [1,1,1,1]
+}
