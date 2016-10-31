@@ -19,16 +19,16 @@ Cook::~Cook() {
 
 void Cook::run() {
     SENAL_CORTE_Handler senal_corte_handler;
-    //SENAL_SALIDA_Handler senal_salida_handler;
+    SENAL_SALIDA_Handler senal_salida_handler;
     SignalHandler::getInstance()->registrarHandler(SENAL_CORTE, &senal_corte_handler);
-    //SignalHandler::getInstance()->registrarHandler(SENAL_SALIDA, &senal_salida_handler);
+    SignalHandler::getInstance()->registrarHandler(SENAL_SALIDA, &senal_salida_handler);
 
     //this->ordersToCookFifo->abrir(O_RDONLY);
     //this->ordersFifo->abrir(); NO
 
     order_t order = searchOrder();
 
-    while ( order.valid/*senal_salida_handler.getGracefulQuit() == 0*/) {
+    while ( order.valid && senal_salida_handler.getGracefulQuit() == 0) {
       if (order.valid && senal_corte_handler.luzPrendida()) {
             cookOrder(order);
             sendOrder(order);

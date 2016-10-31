@@ -56,7 +56,6 @@ void liberarRecursos(Semaforo* sem1, Semaforo* sem2, Fifo* f1, Fifo* f2, Fifo* f
 }
 
 int main(int argc, char** argv) {
-  signal(SIGPIPE, SIG_IGN);
     //TODOS HANDLEAN SIGUSR1
     SENAL_AVISO_Handler senal_aviso_handler;
     SignalHandler::getInstance()->registrarHandler(SENAL_AVISO,&senal_aviso_handler);

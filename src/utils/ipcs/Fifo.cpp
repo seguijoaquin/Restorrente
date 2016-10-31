@@ -58,6 +58,7 @@ ssize_t Fifo::leer(char* buffer, size_t buffSize) {
         if (resultado == 0) {
             cerrar();
         }
+
     }
 
     return resultado;

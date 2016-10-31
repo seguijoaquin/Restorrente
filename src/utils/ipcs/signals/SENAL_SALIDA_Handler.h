@@ -28,8 +28,8 @@ public:
 
     virtual int handleSignal ( int signum ) {
         assert ( signum == SENAL_SALIDA );
-        sleep(2);
-        std::cout << "Recibo senial salida: " << getpid() << std::endl;
+        //sleep(2);
+        //std::cout << "Recibo senial salida: " << getpid() << std::endl;
         this->gracefulQuit = 1;
         return 0;
     }

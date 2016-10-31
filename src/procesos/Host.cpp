@@ -30,13 +30,13 @@ Host::~Host() {
 }
 
 void Host::run() {
-    //SENAL_SALIDA_Handler senal_salida_handler;
+    SENAL_SALIDA_Handler senal_salida_handler;
     SignalHandler::getInstance()->registrarHandler(SENAL_CORTE, &this->senal_corte_handler);
-    //SignalHandler::getInstance()->registrarHandler(SENAL_SALIDA, &senal_salida_handler);
+    SignalHandler::getInstance()->registrarHandler(SENAL_SALIDA, &senal_salida_handler);
 
     __pid_t dinerPid = searchDinerInDoor();
 
-    while ((dinerPid != 0) /*|| senal_salida_handler.getGracefulQuit() == 0*/) {
+    while ((dinerPid != 0) && senal_salida_handler.getGracefulQuit() == 0) {
         if (dinerPid != 0 && this->senal_corte_handler.luzPrendida()) { //Si cuando voy a buscar un diner nuevo, no tengo EOF
             if (dinerCanEnter()) {
                 if (existFreeTable()) {

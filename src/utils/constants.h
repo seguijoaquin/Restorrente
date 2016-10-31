@@ -32,10 +32,10 @@
 #define KEY_MEMORY 'm'
 #define KEY_TABLES 't'
 
-#define MOVE_TO_TABLE_TIME 2
-#define MOVE_TO_LIVING_TIME 2
+#define MOVE_TO_TABLE_TIME 1
+#define MOVE_TO_LIVING_TIME 1
 
-#define THINK_ORDER_TIME 0
+#define THINK_ORDER_TIME 1
 #define EAT_TIME 1
 
 #define TAKE_ORDER_TIME 1

@@ -32,8 +32,8 @@ Waiter::~Waiter() {
 
 
 void Waiter::run() {
-    //SENAL_SALIDA_Handler senal_salida_handler;
-    //SignalHandler::getInstance()->registrarHandler(SENAL_SALIDA,&senal_salida_handler);
+    SENAL_SALIDA_Handler senal_salida_handler;
+    SignalHandler::getInstance()->registrarHandler(SENAL_SALIDA,&senal_salida_handler);
     SignalHandler::getInstance()->registrarHandler(SENAL_CORTE,&this->senal_corte_handler);
 
     //this->ordersToCookFifo->abrir(); NO
@@ -41,7 +41,7 @@ void Waiter::run() {
 
     order_t order = searchOrder();
 
-    while (order.valid/*senal_salida_handler.getGracefulQuit() == 0*/) {
+    while (order.valid && senal_salida_handler.getGracefulQuit() == 0) {
         if (order.valid) {
             //std::cout << "[Waiter:" << getpid() <<"] - Recibe order: " << "type: "<< order.type  <<" pid: " << order.pid << std::endl;
             if (order.type == 'd') {
