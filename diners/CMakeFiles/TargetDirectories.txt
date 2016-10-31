@@ -1,0 +1,3 @@
+/home/joaquin/ClionProjects/Restorrente/diners/CMakeFiles/edit_cache.dir
+/home/joaquin/ClionProjects/Restorrente/diners/CMakeFiles/rebuild_cache.dir
+/home/joaquin/ClionProjects/Restorrente/diners/CMakeFiles/comensales.dir
