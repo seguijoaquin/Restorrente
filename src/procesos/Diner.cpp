@@ -82,25 +82,6 @@ void Diner::run() {
     leaveRestaurant(this->senal_corte_handler.luzCortada());
 }
 
-void Diner::pedirLaCuenta() {
-
-  __pid_t pid = getpid();
-  Logger::getInstance()->insert(KEY_DINER, "Pide la cuenta a un mozo");
-
-  order_t order;
-  order.pid = pid;
-  order.type = 'b';
-  order.toPay = 0;
-
-  char data[sizeof(order_t)];
-  serializador.serialize(&order,data);
-
-  //ordersFifo->abrir(O_WRONLY);
-  ordersFifo->escribir(data, sizeof(order_t));
-  //ordersFifo->cerrar();
-
-}
-
 void Diner::enterToRestaurant() {
 
   __pid_t pid = getpid();
@@ -108,7 +89,7 @@ void Diner::enterToRestaurant() {
 
   //this->dinerInDoorFifo->abrir(O_WRONLY);
   this->dinerInDoorFifo->escribir((char *) &pid, sizeof(__pid_t));
-  //this->dinerInDoorFifo->cerrar();
+  this->dinerInDoorFifo->cerrar(); //Ultima vez que escribo en dinerInDoorFifo
 }
 
 bool Diner::waitToSeat() {
@@ -167,6 +148,26 @@ void Diner::eat() {
 
 }
 
+
+void Diner::pedirLaCuenta() {
+
+  __pid_t pid = getpid();
+  Logger::getInstance()->insert(KEY_DINER, "Pide la cuenta a un mozo");
+
+  order_t order;
+  order.pid = pid;
+  order.type = 'b';
+  order.toPay = 0;
+
+  char data[sizeof(order_t)];
+  serializador.serialize(&order,data);
+
+  //ordersFifo->abrir(O_WRONLY);
+  ordersFifo->escribir(data, sizeof(order_t));
+  //ordersFifo->cerrar();
+
+}
+
 void Diner::esperoLaFactura() {
 
   char wait;
@@ -192,7 +193,7 @@ void Diner::pay() {
 
       //ordersFifo->abrir(O_WRONLY);
       ordersFifo->escribir(data, sizeof(order_t));
-      //ordersFifo->cerrar();
+      ordersFifo->cerrar(); //Ultima vez que escribo en ordersFifo antes de salir
     }
 
 }

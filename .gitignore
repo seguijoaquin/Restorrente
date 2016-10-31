@@ -37,6 +37,9 @@ CMakeCache.txt
 /CMakeFiles/*
 Makefile
 cmake_install.cmake
+CMakeFiles
+corte
+consultas
 
 #EXE
 resto_simulation_c

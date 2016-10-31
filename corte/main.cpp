@@ -18,7 +18,12 @@ int main(int argc, char** argv) {
 
     if (estadoMemoria == SHM_OK) {
         restaurant_t consulta_restaurant = memoriaCompartida.leer();
-        killpg(consulta_restaurant.main_pid,SENAL_CORTE);
+        if (consulta_restaurant.isOpen) {
+            Logger::getInstance()->info("Señal de corte lanzada");
+            killpg(consulta_restaurant.main_pid,SENAL_CORTE);
+        } else {
+          Logger::getInstance()->info("Restaurant cerrado - No se puede lanzar señal de corte");
+        }
     } else {
         Logger::getInstance()->insert(KEY_ERROR,ERROR_MEMORIA_COMPARTIDA,estadoMemoria);
     }
