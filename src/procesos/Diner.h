@@ -17,6 +17,7 @@
 #include "../utils/ipcs/Fifo.h"
 #include "../utils/ipcs/MemoriaCompartida.h"
 #include "../utils/ipcs/Semaforo.h"
+#include "../utils/ipcs/Lock.h"
 #include "../utils/Serializador.h"
 #include "../utils/constants.h"
 #include "../utils/ipcs/signals/SENAL_CORTE_Handler.h"
@@ -36,6 +37,8 @@ private:
 
     Semaforo* memorySemaphore;
     Semaforo* tablesSemaphore;
+
+    LockFile* leavingLock;
 
     unsigned int toPay;
 

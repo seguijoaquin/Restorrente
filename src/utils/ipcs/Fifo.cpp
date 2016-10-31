@@ -11,6 +11,7 @@
 #include <sys/stat.h>
 #include <string.h>
 
+
 using namespace std;
 
 Fifo::Fifo(std::string nombre) {
@@ -43,15 +44,6 @@ ssize_t Fifo::escribir(char* dato, size_t datoSize) {
     // se escriben los datos en el fifo
     ssize_t resultado = write(this->fileDes, (const void *) dato, datoSize);
 
-    char pid[10];
-    char* str;
-    snprintf(pid, 10,"%d",(int)getpid());
-    strcat (str, pid);
-    if (resultado == -1) {
-      std::string mensaje = str + std::string(": Error en Fifo->write(): ") + std::string(strerror(errno)) + std::string("\n");
-      throw mensaje;
-    }
-
     return resultado;
 }
 
@@ -67,16 +59,7 @@ ssize_t Fifo::leer(char* buffer, size_t buffSize) {
             cerrar();
         }
     }
-/*
-    char pid[10];
-    char* str;
-    snprintf(pid, 10,"%d",(int)getpid());
-    strcat (str, pid);
-    if (resultado == -1) {
-      std::string mensaje = str + std::string(": Error en Fifo->read(): ") + std::string(strerror(errno)) + std::string("\n");
-      throw mensaje;
-    }
-*/
+
     return resultado;
 }
 

@@ -30,13 +30,13 @@ Host::~Host() {
 }
 
 void Host::run() {
-    SENAL_SALIDA_Handler senal_salida_handler;
+    //SENAL_SALIDA_Handler senal_salida_handler;
     SignalHandler::getInstance()->registrarHandler(SENAL_CORTE, &this->senal_corte_handler);
-    SignalHandler::getInstance()->registrarHandler(SENAL_SALIDA, &senal_salida_handler);
+    //SignalHandler::getInstance()->registrarHandler(SENAL_SALIDA, &senal_salida_handler);
 
+    __pid_t dinerPid = searchDinerInDoor();
 
-    while (senal_salida_handler.getGracefulQuit() == 0) {
-        __pid_t dinerPid = searchDinerInDoor();
+    while ((dinerPid != 0) /*|| senal_salida_handler.getGracefulQuit() == 0*/) {
         if (dinerPid != 0 && this->senal_corte_handler.luzPrendida()) { //Si cuando voy a buscar un diner nuevo, no tengo EOF
             if (dinerCanEnter()) {
                 if (existFreeTable()) {
@@ -48,25 +48,28 @@ void Host::run() {
                 sendOutDiner(dinerPid);
             }
         }
-        sleep(1);
+        dinerPid = searchDinerInDoor();
     }
+    this->dinerInLivingFifo->cerrar();
 }
 
 __pid_t Host::searchDinerInDoor() {
   __pid_t dinerPid = 0;
 
+  //Resto de los diners quedan aca esperando el lock
   dinerInDoorLock->tomarLock();
 
+  //1º - Abrir, clavar aca al host
   ssize_t result = dinerInDoorFifo->leer((char*) (&dinerPid), sizeof(__pid_t));
 
   dinerInDoorLock->liberarLock();
-  if (result != 0) { //Si el fifo no esta vacio, entonces atiendo a alguien
+
+  if ((result != 0) && (result != -1)) { //Si el fifo no esta vacio, entonces atiendo a alguien
       Logger::getInstance()->insert(KEY_HOST, STRINGS_SERVE_DINER, (int)dinerPid);
+      return dinerPid;
+  } else {
+    return 0;//en caso de que el fifo esté vacío, dinerPid es 0
   }
-
-  if (result == -1) return 0;
-
-  return dinerPid; //en caso de que el fifo esté vacío, dinerPid es 0
 }
 
 bool Host::dinerCanEnter() {
@@ -111,6 +114,7 @@ bool Host::existFreeTable() {
 }
 
 void Host::moveDinerToTable(__pid_t dinerPid) {
+
   Logger::getInstance()->insert(KEY_HOST, STRINGS_ASSIGN_TABLE, (int)dinerPid);
   sleep(MOVE_TO_TABLE_TIME);
 
@@ -119,12 +123,13 @@ void Host::moveDinerToTable(__pid_t dinerPid) {
 
   char response = 1;
   Fifo dinerFifo (ssDinerFifoName.str());
-  //dinerFifo.abrir();
+  //dinerFifo.abrir(O_WRONLY);
   dinerFifo.escribir(&response, sizeof(char));
-  //dinerFifo.cerrar();
+
 }
 
 void Host::moveDinerToLiving(__pid_t dinerPid) {
+
   Logger::getInstance()->insert(KEY_HOST, STRINGS_MOVE_DINER_TO_LIVING, (int)dinerPid);
   sleep(MOVE_TO_LIVING_TIME);
 
@@ -136,12 +141,14 @@ void Host::moveDinerToLiving(__pid_t dinerPid) {
 
   memorySemaphore->signal();
 
-  //dinerInLivingFifo->abrir();
-  dinerInLivingFifo->escribir((char *) &dinerPid, sizeof(__pid_t));
+  //dinerInLivingFifo->abrir(O_WRONLY);
+  this->dinerInLivingFifo->escribir((char *) &dinerPid, sizeof(__pid_t));
   //dinerInLivingFifo->cerrar();
+
 }
 
 void Host::sendOutDiner(__pid_t dinerPid) {
+
   Logger::getInstance()->insert(KEY_HOST, STRINGS_SEND_OUT, (int)dinerPid);
 
   stringstream ssDinerFifoName;
@@ -149,7 +156,6 @@ void Host::sendOutDiner(__pid_t dinerPid) {
 
   char response = 0;
   Fifo dinerFifo(ssDinerFifoName.str());
-  //dinerFifo.abrir();
+  //dinerFifo.abrir(O_WRONLY);
   dinerFifo.escribir(&response, sizeof(char));
-  //dinerFifo.cerrar();
 }

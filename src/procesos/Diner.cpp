@@ -12,6 +12,8 @@ Diner::Diner() {
     this->dinerFifo = new Fifo(ssDinerFifoName.str()); //Lectura
     this->ordersFifo = new Fifo(ORDERS); //Escritura
 
+    this->leavingLock = new LockFile(LEAVING_LOCK);
+
     sharedMemory.crear(FILE_RESTAURANT, KEY_MEMORY);
 
     this->memorySemaphore = new Semaforo(FILE_RESTAURANT, KEY_MEMORY);
@@ -63,7 +65,9 @@ void Diner::run() {
     bool hasPlace = waitToSeat();
 
     if (hasPlace && senal_corte_handler.luzPrendida()) {
-        //this->ordersFifo->abrir();
+
+        //this->ordersFifo->abrir(O_WRONLY);
+
         srand(time(NULL));
         int i = 0;
         while (i<repeatOrder() && senal_corte_handler.luzPrendida()) {
@@ -79,6 +83,7 @@ void Diner::run() {
 }
 
 void Diner::pedirLaCuenta() {
+
   __pid_t pid = getpid();
   Logger::getInstance()->insert(KEY_DINER, "Pide la cuenta a un mozo");
 
@@ -89,30 +94,34 @@ void Diner::pedirLaCuenta() {
 
   char data[sizeof(order_t)];
   serializador.serialize(&order,data);
-  //ordersFifo->abrir();
+
+  //ordersFifo->abrir(O_WRONLY);
   ordersFifo->escribir(data, sizeof(order_t));
   //ordersFifo->cerrar();
+
 }
 
 void Diner::enterToRestaurant() {
+
   __pid_t pid = getpid();
   Logger::getInstance()->insert(KEY_DINER, STRINGS_ENTER_RESTO);
 
-  //this->dinerInDoorFifo->abrir();
+  //this->dinerInDoorFifo->abrir(O_WRONLY);
   this->dinerInDoorFifo->escribir((char *) &pid, sizeof(__pid_t));
   //this->dinerInDoorFifo->cerrar();
 }
 
 bool Diner::waitToSeat() {
+
   Logger::getInstance()->insert(KEY_DINER, STRINGS_WAITING_FOR_A_TABLE);
 
-  //this->dinerFifo->abrir();
+  //this->dinerFifo->abrir(O_RDONLY);
 
   char wait;
   //Queda bloqueado hasta que Attendant o Host escriben en Diner_pid_fifo
   ssize_t result = dinerFifo->leer(&wait,sizeof(char));
 
-  if (wait == 1 && result != -1) {
+  if (wait == 1) {
       Logger::getInstance()->insert(KEY_DINER, STRINGS_SEAT);
       return true;
   } else {
@@ -121,6 +130,7 @@ bool Diner::waitToSeat() {
 }
 
 void Diner::order() {
+
   sleep(THINK_ORDER_TIME);
 
   __pid_t pid = getpid();
@@ -136,25 +146,32 @@ void Diner::order() {
 
   char data[sizeof(order_t)];
   serializador.serialize(&order,data);
-  //ordersFifo->abrir();
+  //ordersFifo->abrir(O_WRONLY);
   ordersFifo->escribir(data, sizeof(order_t));
   //ordersFifo->cerrar();
+
 }
 
 void Diner::waitOrder() {
+
   Logger::getInstance()->insert(KEY_DINER, STRINGS_WAITING_ORDER);
   char wait;
   ssize_t result = dinerFifo->leer(&wait, sizeof(char));
+
 }
 
 void Diner::eat() {
+
   Logger::getInstance()->insert(KEY_DINER, STRINGS_EATING);
   sleep(EAT_TIME);
+
 }
 
 void Diner::esperoLaFactura() {
+
   char wait;
   ssize_t result = dinerFifo->leer(&wait, sizeof(char));
+
 }
 
 void Diner::pay() {
@@ -173,13 +190,18 @@ void Diner::pay() {
       char data[sizeof(order_t)];
       serializador.serialize(&order,data);
 
-      //ordersFifo->abrir();
+      //ordersFifo->abrir(O_WRONLY);
       ordersFifo->escribir(data, sizeof(order_t));
       //ordersFifo->cerrar();
     }
+
 }
 
 void Diner::leaveRestaurant(bool powerOutage) {
+
+
+  this->leavingLock->tomarLock();
+
   Logger::getInstance()->insert(KEY_DINER, STRINGS_LEAVING);
 
   memorySemaphore->wait();
@@ -197,7 +219,7 @@ void Diner::leaveRestaurant(bool powerOutage) {
           restaurant.money_not_cashed += this->toPay;
       }
 
-      if (restaurant.busyTables > 0) {
+     if (restaurant.busyTables > 0) {
           restaurant.busyTables--;
       }
 
@@ -205,7 +227,8 @@ void Diner::leaveRestaurant(bool powerOutage) {
 
       if (restaurant.diners >= restaurant.diners_total && restaurant.dinersInRestaurant == 0) {
           Logger::getInstance()->insert(KEY_DINER, STRINGS_LAST_DINER);
-          //this->dinerInDoorFifo->cerrar(); //Cierro el fifo porque ya pasaron todos
+          this->dinerInDoorFifo->cerrar(); //Cierro el fifo porque ya pasaron todos
+          this->ordersFifo->cerrar();
           kill(restaurant.main_pid, SENAL_AVISO);
       }
   }
@@ -213,5 +236,7 @@ void Diner::leaveRestaurant(bool powerOutage) {
   this->sharedMemory.escribir(restaurant);
 
   memorySemaphore->signal();
+
+  this->leavingLock->liberarLock();
 
 }

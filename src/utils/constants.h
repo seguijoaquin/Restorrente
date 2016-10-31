@@ -23,6 +23,7 @@
 #define DINER_IN_DOOR_LOCK "/tmp/resto/diner_in_door_lock"
 #define ORDERS_LOCK "/tmp/resto/orders_lock"
 #define DINER_IN_LIVING_LOCK "/tmp/resto/diner_in_living_lock"
+#define LEAVING_LOCK "/tmp/resto/leaving_lock"
 
 //SEMAPHORES
 #define FILE_RESTAURANT "/tmp/resto/restaurant.tmp"
