@@ -73,7 +73,7 @@ int main(int argc, char** argv) {
     Fifo dinerInLiving(DINER_IN_LIVING);
 
     int estadoMemoria = memoriaCompartida.crear(FILE_RESTAURANT,KEY_MEMORY);
-    //std::cout << "Main pid: " << getpid() << std::endl;
+
     if (estadoMemoria == SHM_OK) {
         inicializar(&memoriaCompartida);
         restaurant_t resto = memoriaCompartida.leer();
@@ -82,6 +82,7 @@ int main(int argc, char** argv) {
             lanzarComensales(resto.diners_arribados);
             if (resto.main_pid == getpid()) {
 
+                killpg(0,SENAL_AVISO);
                 //Estoy en proceso main
                 //Terminaron los comensales, espero a que terminen los empleados
                 for (int i = 0; i < (resto.hosts + resto.waiters + 1 + 1); ++i) {

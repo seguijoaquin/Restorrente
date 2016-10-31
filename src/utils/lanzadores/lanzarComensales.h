@@ -34,6 +34,7 @@ void lanzarComensales(unsigned int diners) {
         for (int i = 0; i < diners; ++i) {
             wait(NULL);
         }
+        
     }
 }
 

@@ -24,7 +24,7 @@ private:
     Semaforo* memorySemaphore;
     Semaforo* freeTableSemaphore;
 
-    void asignTable(SENAL_CORTE_Handler senal_corte_handler);
+    bool asignTable(SENAL_CORTE_Handler senal_corte_handler);
 
 public:
     Attendant();

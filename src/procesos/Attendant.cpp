@@ -33,15 +33,15 @@ void Attendant::run() {
     SignalHandler::getInstance()->registrarHandler(SENAL_SALIDA,&senal_salida_handler);
 
     this->dinersInLivingFifo->abrir(O_RDONLY);
-
-    while (senal_salida_handler.getGracefulQuit() == 0) {
-        asignTable(senal_corte_handler);
+    bool salida = asignTable(senal_corte_handler);
+    while (salida && senal_salida_handler.getGracefulQuit() == 0) {
+        salida = asignTable(senal_corte_handler);
     }
 
     SignalHandler::destruir();
 }
 
-void Attendant::asignTable(SENAL_CORTE_Handler senal_corte_handler) {
+bool Attendant::asignTable(SENAL_CORTE_Handler senal_corte_handler) {
 
   __pid_t dinerPid;
 
@@ -69,7 +69,10 @@ void Attendant::asignTable(SENAL_CORTE_Handler senal_corte_handler) {
     //dinerFifo.abrir(O_WRONLY);
     dinerFifo.escribir(&response, sizeof(char));
     //dinerFifo.cerrar(); //innecesario porque se llama en el destructor
+    return true;
 
+  } else {
+    return false;
   }
 
 }

@@ -195,11 +195,9 @@ void Diner::pay() {
       ordersFifo->escribir(data, sizeof(order_t));
       ordersFifo->cerrar(); //Ultima vez que escribo en ordersFifo antes de salir
     }
-
 }
 
 void Diner::leaveRestaurant(bool powerOutage) {
-
 
   this->leavingLock->tomarLock();
 
@@ -230,7 +228,7 @@ void Diner::leaveRestaurant(bool powerOutage) {
           Logger::getInstance()->insert(KEY_DINER, STRINGS_LAST_DINER);
           this->dinerInDoorFifo->cerrar(); //Cierro el fifo porque ya pasaron todos
           this->ordersFifo->cerrar();
-          kill(restaurant.main_pid, SENAL_AVISO);
+          //kill(restaurant.main_pid, SENAL_AVISO);
       }
   }
 
