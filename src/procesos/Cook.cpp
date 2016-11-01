@@ -23,7 +23,7 @@ void Cook::run() {
     SignalHandler::getInstance()->registrarHandler(SENAL_CORTE, &senal_corte_handler);
     SignalHandler::getInstance()->registrarHandler(SENAL_SALIDA, &senal_salida_handler);
 
-    //this->ordersToCookFifo->abrir(O_RDONLY);
+    this->ordersToCookFifo->abrir(O_RDONLY);
     //this->ordersFifo->abrir(); NO
 
     order_t order = searchOrder();
@@ -36,6 +36,7 @@ void Cook::run() {
       order = searchOrder();
     }
 
+    this->ordersToCookFifo->cerrar();
     this->ordersFifo->cerrar();
 
     SignalHandler::destruir();
@@ -73,7 +74,7 @@ void Cook::sendOrder(order_t order) {
   char data[sizeof(order_t)];
   serializador.serialize(&order,data);
 
-  //ordersFifo->abrir(O_WRONLY);
+  ordersFifo->abrir(O_WRONLY);
   ordersFifo->escribir(data, sizeof(order_t));
   //ordersFifo->cerrar();
 

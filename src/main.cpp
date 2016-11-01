@@ -1,5 +1,7 @@
 #include <iostream>
 #include <unistd.h>
+#include <getopt.h>
+#include <sys/wait.h>
 
 #include "utils/types.h"
 #include "utils/constants.h"
@@ -15,30 +17,33 @@
 #include "utils/ipcs/signals/SENAL_AVISO_Handler.h"
 
 void inicializar(MemoriaCompartida<restaurant_t>* sharedMemory) {
-    Logger::getInstance()->insert(KEY_RESTO, "Initing Resto ", getpid());
-    unsigned int hosts = Parser::getInstance()->getIntValue("hosts");
-    unsigned int waiters = Parser::getInstance()->getIntValue("waiters");
-    unsigned int tables = Parser::getInstance()->getIntValue("tables");
-    unsigned int diners_total = Parser::getInstance()->getIntValue("diners_total");
-    unsigned int diners_arribados = Parser::getInstance()->getIntValue("diners_arribados");
+  restaurant_t consultar = sharedMemory->leer();
+  if(!consultar.isOpen) {
+      Logger::getInstance()->insert(KEY_RESTO, "Initing Resto ", getpid());
+      unsigned int hosts = Parser::getInstance()->getIntValue("hosts");
+      unsigned int waiters = Parser::getInstance()->getIntValue("waiters");
+      unsigned int tables = Parser::getInstance()->getIntValue("tables");
+      unsigned int diners_total = Parser::getInstance()->getIntValue("diners_total");
+      unsigned int diners_arribados = Parser::getInstance()->getIntValue("diners_arribados");
 
-    restaurant_t restaurant;
-    restaurant.main_pid = getpid();
-    restaurant.diners_main_pid = 0;
-    restaurant.tables = tables;
-    restaurant.busyTables = 0;
-    restaurant.dinersInLiving = 0;
-    restaurant.cash = 0;
-    restaurant.diners = 0;
-    restaurant.dinersInRestaurant = 0;
-    restaurant.money_not_cashed = 0;
-    restaurant.hosts = hosts;
-    restaurant.waiters = waiters;
-    restaurant.diners_total = diners_total;
-    restaurant.diners_arribados = diners_arribados;
-    restaurant.isOpen = true;
+      restaurant_t restaurant;
+      restaurant.main_pid = getpid();
+      restaurant.diners_main_pid = 0;
+      restaurant.tables = tables;
+      restaurant.busyTables = 0;
+      restaurant.dinersInLiving = 0;
+      restaurant.cash = 0;
+      restaurant.diners = 0;
+      restaurant.dinersInRestaurant = 0;
+      restaurant.money_not_cashed = 0;
+      restaurant.hosts = hosts;
+      restaurant.waiters = waiters;
+      restaurant.diners_total = diners_total;
+      restaurant.diners_arribados = diners_arribados;
+      restaurant.isOpen = true;
 
-    sharedMemory->escribir(restaurant);
+      sharedMemory->escribir(restaurant);
+    }
 }
 
 void liberarRecursos(Semaforo* sem1, Semaforo* sem2, Fifo* f1, Fifo* f2, Fifo* f3, Fifo* f4) {
@@ -54,6 +59,8 @@ void liberarRecursos(Semaforo* sem1, Semaforo* sem2, Fifo* f1, Fifo* f2, Fifo* f
     f4->cerrar();
     f4->eliminar();
 }
+
+/*
 
 int main(int argc, char** argv) {
     //TODOS HANDLEAN SIGUSR1
@@ -75,7 +82,7 @@ int main(int argc, char** argv) {
     int estadoMemoria = memoriaCompartida.crear(FILE_RESTAURANT,KEY_MEMORY);
 
     if (estadoMemoria == SHM_OK) {
-        inicializar(&memoriaCompartida);
+        inicializar(&memoriaCompartida); //Lo hace solo si no fue abierto antes
         restaurant_t resto = memoriaCompartida.leer();
         lanzarEmpleados(getpid(),resto.hosts,resto.waiters);
         if (resto.main_pid == getpid()) {
@@ -113,6 +120,120 @@ int main(int argc, char** argv) {
     } else {
         Logger::getInstance()->insert(KEY_ERROR,ERROR_MEMORIA_COMPARTIDA,estadoMemoria);
         liberarRecursos(&semaforoMemoria,&semaforoMesas,&orders,&ordersToCook,&dinerInDoor,&dinerInLiving);
+    }
+    return 0;
+}
+*/
+
+
+static const char *optString = "icd:q:p:sh?";
+
+static const struct option longOpts[] = {
+        { "init", no_argument, NULL, 'i' },
+        { "diner", required_argument, NULL,'d' },
+        { "query", required_argument, NULL, 'q' },
+        { "power", required_argument, NULL, 'p' },
+        { "help", no_argument, NULL, 'h' },
+        { NULL, no_argument, NULL, 0 }
+};
+
+void imprimirConsulta(MemoriaCompartida<restaurant_t>* mem) {
+  restaurant_t consulta_restaurant = mem->leer();
+  std::cout << "******************************************************************" << std::endl;
+  Logger::getInstance()->insert(KEY_RESTO, STRINGS_CASH, consulta_restaurant.cash);
+  Logger::getInstance()->insert(KEY_RESTO, STRINGS_DINERS_IN_LIVING, consulta_restaurant.dinersInLiving);
+  Logger::getInstance()->insert(KEY_RESTO, STRINGS_CASH_LOST, consulta_restaurant.money_not_cashed);
+  std::cout << "******************************************************************" << std::endl;
+}
+
+int main(int argc, char** argv) {
+    restaurant_t restaurant;
+    FILE* file = fopen(FILE_RESTAURANT, "w");
+
+    if (!file) {
+        std::stringstream log;
+        log << "Error en fopen():" << strerror(errno);
+        Logger::getInstance()->error(log.str());
+        exit(0);
+    } else {
+        fclose(file);
+    }
+
+    //TODOS HANDLEAN SIGUSR1
+    SENAL_AVISO_Handler senal_aviso_handler;
+    SignalHandler::getInstance()->registrarHandler(SENAL_AVISO,&senal_aviso_handler);
+
+    MemoriaCompartida<restaurant_t> memoriaCompartida;
+
+    Semaforo semaforoMemoria(FILE_RESTAURANT,KEY_MEMORY);
+    Semaforo semaforoMesas(FILE_RESTAURANT,KEY_TABLES);
+
+    Fifo orders(ORDERS);
+    Fifo ordersToCook(ORDERS_TO_COOK);
+    Fifo dinerInDoor(DINER_IN_DOOR);
+    Fifo dinerInLiving(DINER_IN_LIVING);
+
+    int estadoMemoria = memoriaCompartida.crear(FILE_RESTAURANT,KEY_MEMORY);
+
+    if (estadoMemoria == SHM_OK) {
+
+      __pid_t empleados_pid = 0;
+      __pid_t comensales_pid = 0;
+
+      int opt = 0;
+      int longIndex;
+
+      __pid_t resto_pid = getpid();
+      opt = getopt_long(argc, argv, optString, longOpts, &longIndex);
+
+      while (opt != -1) {
+          switch (opt) {
+              case 'i':{
+                empleados_pid = getpid();
+
+                //Al iniciar el resto, debo inicialir los semaforos y memoriaCompartida, sino no
+                semaforoMemoria.inicializar(1);
+                semaforoMesas.inicializar(0);
+                inicializar(&memoriaCompartida);
+
+                restaurant_t resto = memoriaCompartida.leer();
+                lanzarEmpleados(resto_pid,resto.hosts,resto.waiters);
+                break;
+              }
+              case 'd': {
+                restaurant_t resto = memoriaCompartida.leer();
+                comensales_pid = getpid();
+                if (resto.isOpen) {
+                  dinerInDoor.abrir(O_WRONLY); //Abro para que arranquen los HOSTS y se traben al leer fifo vacio
+                  orders.abrir(O_WRONLY); //Abro para que arranquen los waiters y se traben al leer fifo vacio
+                  lanzarComensales(atoi(optarg));
+                }
+                else {
+                  Logger::getInstance()->info("Resto cerrado");
+                }
+                break;
+              }
+          }
+          break;
+      }
+
+      if (empleados_pid == getpid()) {
+        imprimirConsulta(&memoriaCompartida);
+        __pid_t pid = getpid();
+        Logger::getInstance()->insert(KEY_RESTO, STRINGS_DESTROY, (int)pid);
+        liberarRecursos(&semaforoMemoria,&semaforoMesas,&orders,&ordersToCook,&dinerInDoor,&dinerInLiving);
+        Logger::getInstance()->insert(KEY_RESTO, STRINGS_FINISHED);
+      }
+
+      if(comensales_pid == getpid()) {
+        //SALGO DEL MAIN DE LOS DINERS
+        dinerInDoor.cerrar();
+        orders.cerrar();
+      }
+
+    } else {
+      Logger::getInstance()->insert(KEY_ERROR,ERROR_MEMORIA_COMPARTIDA,estadoMemoria);
+      liberarRecursos(&semaforoMemoria,&semaforoMesas,&orders,&ordersToCook,&dinerInDoor,&dinerInLiving);
     }
     return 0;
 }

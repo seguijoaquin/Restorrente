@@ -34,6 +34,8 @@ void Host::run() {
     SignalHandler::getInstance()->registrarHandler(SENAL_CORTE, &this->senal_corte_handler);
     SignalHandler::getInstance()->registrarHandler(SENAL_SALIDA, &senal_salida_handler);
 
+    this->dinerInDoorFifo->abrir(O_RDONLY);
+
     __pid_t dinerPid = searchDinerInDoor();
 
     while ((dinerPid != 0) && senal_salida_handler.getGracefulQuit() == 0) {
@@ -123,7 +125,7 @@ void Host::moveDinerToTable(__pid_t dinerPid) {
 
   char response = 1;
   Fifo dinerFifo (ssDinerFifoName.str());
-  //dinerFifo.abrir(O_WRONLY);
+  dinerFifo.abrir(O_WRONLY);
   dinerFifo.escribir(&response, sizeof(char));
 
 }
@@ -141,7 +143,7 @@ void Host::moveDinerToLiving(__pid_t dinerPid) {
 
   memorySemaphore->signal();
 
-  //dinerInLivingFifo->abrir(O_WRONLY);
+  this->dinerInLivingFifo->abrir(O_WRONLY);
   this->dinerInLivingFifo->escribir((char *) &dinerPid, sizeof(__pid_t));
   //dinerInLivingFifo->cerrar();
 
@@ -156,6 +158,6 @@ void Host::sendOutDiner(__pid_t dinerPid) {
 
   char response = 0;
   Fifo dinerFifo(ssDinerFifoName.str());
-  //dinerFifo.abrir(O_WRONLY);
+  dinerFifo.abrir(O_WRONLY);
   dinerFifo.escribir(&response, sizeof(char));
 }

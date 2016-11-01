@@ -37,7 +37,7 @@ void Waiter::run() {
     SignalHandler::getInstance()->registrarHandler(SENAL_CORTE,&this->senal_corte_handler);
 
     //this->ordersToCookFifo->abrir(); NO
-    //this->ordersFifo->abrir(O_RDONLY);
+    this->ordersFifo->abrir(O_RDONLY);
 
     order_t order = searchOrder();
 
@@ -98,7 +98,7 @@ void Waiter::requestOrder(order_t order) {
   char data[sizeof(order_t)];
   serializador.serialize(&order,data);
 
-  //this->ordersToCookFifo->abrir(O_WRONLY);
+  this->ordersToCookFifo->abrir(O_WRONLY);
   this->ordersToCookFifo->escribir(data, sizeof(order_t));
   //this->ordersToCookFifo->cerrar();
 
@@ -113,7 +113,7 @@ void Waiter::hacerLaFactura(order_t order) {
 
   char response = 1;
   Fifo dinerFifo(ssDinerFifoName.str());
-  //dinerFifo.abrir(O_WRONLY);
+  dinerFifo.abrir(O_WRONLY);
   dinerFifo.escribir(&response, sizeof(char));
   //dinerFifo.cerrar();
 
@@ -144,7 +144,7 @@ void Waiter::deliverOrder(order_t order) {
 
   char response = 1;
   Fifo dinerFifo(ssDinerFifoName.str());
-  //dinerFifo.abrir(O_WRONLY);
+  dinerFifo.abrir(O_WRONLY);
   dinerFifo.escribir(&response, sizeof(char));
   //dinerFifo.cerrar();
 

@@ -33,6 +33,7 @@ void Attendant::run() {
     SignalHandler::getInstance()->registrarHandler(SENAL_SALIDA,&senal_salida_handler);
 
     this->dinersInLivingFifo->abrir(O_RDONLY);
+
     bool salida = asignTable(senal_corte_handler);
     while (salida && senal_salida_handler.getGracefulQuit() == 0) {
         salida = asignTable(senal_corte_handler);
@@ -48,7 +49,7 @@ bool Attendant::asignTable(SENAL_CORTE_Handler senal_corte_handler) {
   //se bloquea esperando leer algo en dinersInLivingFifo
   ssize_t result = dinersInLivingFifo->leer((char*) (&dinerPid), sizeof(__pid_t));
 
-  if ((result != -1) && (result != 0) && senal_corte_handler.luzPrendida()) {
+  if ((result != -1) && (result != 0) && (dinerPid != 0) && senal_corte_handler.luzPrendida()) {
     freeTableSemaphore->wait();
 
     // Actualizo Lista de Comensales
@@ -66,7 +67,7 @@ bool Attendant::asignTable(SENAL_CORTE_Handler senal_corte_handler) {
 
     char response = 1;
     Fifo dinerFifo(ssDinerFifoName.str());
-    //dinerFifo.abrir(O_WRONLY);
+    dinerFifo.abrir(O_WRONLY);
     dinerFifo.escribir(&response, sizeof(char));
     //dinerFifo.cerrar(); //innecesario porque se llama en el destructor
     return true;

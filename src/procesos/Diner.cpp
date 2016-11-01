@@ -66,7 +66,7 @@ void Diner::run() {
 
     if (hasPlace && senal_corte_handler.luzPrendida()) {
 
-        //this->ordersFifo->abrir(O_WRONLY);
+        this->ordersFifo->abrir(O_WRONLY);
 
         srand(time(NULL));
         int i = 0;
@@ -87,7 +87,7 @@ void Diner::enterToRestaurant() {
   __pid_t pid = getpid();
   Logger::getInstance()->insert(KEY_DINER, STRINGS_ENTER_RESTO);
 
-  //this->dinerInDoorFifo->abrir(O_WRONLY);
+  this->dinerInDoorFifo->abrir(O_WRONLY);
   this->dinerInDoorFifo->escribir((char *) &pid, sizeof(__pid_t));
   this->dinerInDoorFifo->cerrar(); //Ultima vez que escribo en dinerInDoorFifo
 }
@@ -96,7 +96,7 @@ bool Diner::waitToSeat() {
 
   Logger::getInstance()->insert(KEY_DINER, STRINGS_WAITING_FOR_A_TABLE);
 
-  //this->dinerFifo->abrir(O_RDONLY);
+  this->dinerFifo->abrir(O_RDONLY);
 
   char wait;
   //Queda bloqueado hasta que Attendant o Host escriben en Diner_pid_fifo
@@ -127,7 +127,7 @@ void Diner::order() {
 
   char data[sizeof(order_t)];
   serializador.serialize(&order,data);
-  //ordersFifo->abrir(O_WRONLY);
+  //this->ordersFifo->abrir(O_WRONLY);
   ordersFifo->escribir(data, sizeof(order_t));
   //ordersFifo->cerrar();
 
@@ -192,8 +192,8 @@ void Diner::pay() {
       serializador.serialize(&order,data);
 
       //ordersFifo->abrir(O_WRONLY);
-      ordersFifo->escribir(data, sizeof(order_t));
-      ordersFifo->cerrar(); //Ultima vez que escribo en ordersFifo antes de salir
+      this->ordersFifo->escribir(data, sizeof(order_t));
+      this->ordersFifo->cerrar(); //Ultima vez que escribo en ordersFifo antes de salir
     }
 }
 

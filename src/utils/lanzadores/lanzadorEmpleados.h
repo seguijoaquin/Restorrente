@@ -54,7 +54,13 @@ void lanzarEmpleados(__pid_t resto_pid, unsigned int hosts, unsigned int waiters
                     Attendant attendant;
                     attendant.run();
                 } else {
-                    //PROCESO PRINCIPAL
+                  //PROCESO PRINCIPAL
+
+                  //Espero a que terminen todos los diners
+                  for (int i = 0; i < (hosts + waiters + 1 + 1); ++i) {
+                      wait(NULL);
+                  }
+
                 }
             }
         }
