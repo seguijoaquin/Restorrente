@@ -10,7 +10,8 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <string.h>
-
+#include "../../logger/logger.h"
+#include "../../logger/mensajes.h"
 
 using namespace std;
 
@@ -48,7 +49,11 @@ ssize_t Fifo::escribir(char* dato, size_t datoSize) {
     if (resultado == -1) {
       std::string mensaje = std::string("Error en Fifo->leer(): ") + std::string(strerror(errno)) + std::string("\n");
       throw mensaje;
+    } else {
+      std::cout << "Escribo " << resultado << "bytes en fifo " << this->nombre << "con ps: "<< getpid() << std::endl;
     }
+
+
 
     return resultado;
 }
@@ -57,21 +62,24 @@ ssize_t Fifo::leer(char* buffer, size_t buffSize) {
     ssize_t resultado = 0;
     resultado = read(this->fileDes, (void *) buffer, buffSize);
 
-/*
+
     while (resultado == 0) {
-        if (this->fileDes == -1) {
+        /*if (this->fileDes == -1) {
             this->fileDes = open(this->nombre.c_str(), O_RDONLY);
         }
+        */
         resultado = read(this->fileDes, (void *) buffer, buffSize);
-        if (resultado == 0) {
+      /*  if (resultado == 0) {
             cerrar();
         }
-
+        */
     }
-*/
+
     if (resultado == -1) {
       std::string mensaje = std::string("Error en Fifo->leer(): ") + std::string(strerror(errno)) + std::string("\n");
       throw mensaje;
+    } else {
+      std::cout << "Leo " << resultado << "bytes en fifo " << this->nombre << "con ps: "<< getpid() << std::endl;
     }
     return resultado;
 }

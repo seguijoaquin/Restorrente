@@ -143,9 +143,11 @@ void Diner::waitOrder() {
   Logger::getInstance()->insert(KEY_DINER, STRINGS_WAITING_ORDER);
   char wait;
   ssize_t result = dinerFifo->leer(&wait, sizeof(char));
-  if (result < 0) {
+  if (result <= 0) {
     Logger::getInstance()->insert(KEY_DINER, "Error al leer dinerFifo->waitOrder()");
     return;
+  } else {
+    Logger::getInstance()->insert(KEY_DINER, "Leyo del fifo Diner una orden del mozo");
   }
 }
 
@@ -179,8 +181,8 @@ void Diner::pedirLaCuenta() {
 void Diner::esperoLaFactura() {
 
   char wait;
-  ssize_t result = dinerFifo->leer(&wait, sizeof(char));
-  if (result < 0) {
+  ssize_t result = dinerFifo->leer(&wait, sizeof(char)); //ACA SALTA ERROR
+  if (result <= 0) {
     Logger::getInstance()->insert(KEY_DINER, "Error al leer dinerFifo->esperoLaFactura()");
     return;
   }

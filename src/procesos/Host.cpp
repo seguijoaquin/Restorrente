@@ -54,6 +54,7 @@ void Host::run() {
                 sendOutDiner(dinerPid);
             }
         }
+        sleep(1);
     }
     this->dinerInLivingFifo->cerrar();
 }
@@ -169,5 +170,5 @@ void Host::sendOutDiner(__pid_t dinerPid) {
   Fifo dinerFifo(ssDinerFifoName.str());
   dinerFifo.abrir(O_WRONLY);
   dinerFifo.escribir(&response, sizeof(char));
-  
+
 }
