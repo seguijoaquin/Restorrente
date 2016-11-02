@@ -46,10 +46,12 @@ void inicializar(MemoriaCompartida<restaurant_t>* sharedMemory) {
     }
 }
 
-void liberarRecursos(Semaforo* sem1, Semaforo* sem2, Fifo* f1, Fifo* f2, Fifo* f3, Fifo* f4) {
+void liberarRecursos(Semaforo* sem1, Semaforo* sem2, Fifo* f1, Fifo* f2, Fifo* f3, Fifo* f4,Semaforo* sem3, Semaforo* sem4) {
     //std::cout << "Estoy liberando cosas desde ps: " << getpid() << std::endl;
     sem1->eliminar();
     sem2->eliminar();
+    sem3->eliminar();
+    sem4->eliminar();
     f1->cerrar();
     f1->eliminar();
     f2->cerrar();
@@ -163,11 +165,15 @@ int main(int argc, char** argv) {
 
     Semaforo semaforoMemoria(FILE_RESTAURANT,KEY_MEMORY);
     Semaforo semaforoMesas(FILE_RESTAURANT,KEY_TABLES);
+    Semaforo semaforoSalidaHosts(FILE_RESTAURANT,KEY_SALIDA_HOSTS);
+    Semaforo semaforoSalidaWaiters(FILE_RESTAURANT,KEY_SALIDA_WAITERS);
 
     Fifo orders(ORDERS);
     Fifo ordersToCook(ORDERS_TO_COOK);
     Fifo dinerInDoor(DINER_IN_DOOR);
     Fifo dinerInLiving(DINER_IN_LIVING);
+
+    Serializador serializador;
 
     int estadoMemoria = memoriaCompartida.crear(FILE_RESTAURANT,KEY_MEMORY);
 
@@ -190,9 +196,12 @@ int main(int argc, char** argv) {
                 //Al iniciar el resto, debo inicialir los semaforos y memoriaCompartida, sino no
                 semaforoMemoria.inicializar(1);
                 semaforoMesas.inicializar(0);
+                semaforoSalidaHosts.inicializar(0);
+                semaforoSalidaWaiters.inicializar(0);
                 inicializar(&memoriaCompartida);
 
                 restaurant_t resto = memoriaCompartida.leer();
+
                 lanzarEmpleados(resto_pid,resto.hosts,resto.waiters);
                 break;
               }
@@ -202,6 +211,8 @@ int main(int argc, char** argv) {
                 if (resto.isOpen) {
                   dinerInDoor.abrir(O_WRONLY); //Abro para que arranquen los HOSTS y se traben al leer fifo vacio
                   orders.abrir(O_WRONLY); //Abro para que arranquen los waiters y se traben al leer fifo vacio
+                  ordersToCook.abrir(O_WRONLY);
+                  dinerInLiving.abrir(O_WRONLY);
                   lanzarComensales(atoi(optarg));
                 }
                 else {
@@ -218,19 +229,52 @@ int main(int argc, char** argv) {
         imprimirConsulta(&memoriaCompartida);
         __pid_t pid = getpid();
         Logger::getInstance()->insert(KEY_RESTO, STRINGS_DESTROY, (int)pid);
-        liberarRecursos(&semaforoMemoria,&semaforoMesas,&orders,&ordersToCook,&dinerInDoor,&dinerInLiving);
+        liberarRecursos(&semaforoMemoria,&semaforoMesas,&orders,&ordersToCook,&dinerInDoor,&dinerInLiving,&semaforoSalidaHosts,&semaforoSalidaWaiters);
         Logger::getInstance()->insert(KEY_RESTO, STRINGS_FINISHED);
       }
 
       if(comensales_pid == getpid()) {
-        //SALGO DEL WAIT DE LOS DINERS
-        dinerInDoor.cerrar();
-        orders.cerrar();
+        restaurant_t resto = memoriaCompartida.leer();
+
+        if (resto.diners >= resto.diners_total && resto.dinersInRestaurant == 0) {
+          //SALGO DEL WAIT DE LOS DINERS
+          __pid_t salida = SALIDA;
+          for (int i = 0; i < resto.hosts ; ++i) {
+            dinerInDoor.escribir((char*) &salida, sizeof(__pid_t));
+            std::cout << "wait host" << i << std::endl;
+            semaforoSalidaHosts.wait();
+            //sleep(2);
+            std::cout << "waited host" << i << std::endl;
+          }
+          dinerInDoor.cerrar();
+
+          order_t order;
+          order.salida = true;
+          char data[sizeof(order_t)];
+          serializador.serialize(&order,data);
+
+          for (int i = 0; i < resto.waiters ; ++i) {
+            orders.escribir(data, sizeof(order_t));
+            std::cout << "wait waiter" << i << std::endl;
+            semaforoSalidaWaiters.wait();
+            //sleep(2);
+            std::cout << "waited waiter" << i << std::endl;
+
+          }
+          orders.cerrar();
+
+          dinerInLiving.escribir((char*) &salida, sizeof(__pid_t));
+          dinerInLiving.cerrar();
+
+          ordersToCook.escribir(data,sizeof(order_t));
+          ordersToCook.cerrar();
+        }
+
       }
 
     } else {
       Logger::getInstance()->insert(KEY_ERROR,ERROR_MEMORIA_COMPARTIDA,estadoMemoria);
-      liberarRecursos(&semaforoMemoria,&semaforoMesas,&orders,&ordersToCook,&dinerInDoor,&dinerInLiving);
+      liberarRecursos(&semaforoMemoria,&semaforoMesas,&orders,&ordersToCook,&dinerInDoor,&dinerInLiving,&semaforoSalidaHosts,&semaforoSalidaWaiters);
     }
     return 0;
 }

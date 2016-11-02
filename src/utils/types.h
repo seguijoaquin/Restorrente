@@ -29,6 +29,12 @@ struct order_t {
     __pid_t pid = 0;
     unsigned int toPay = 0;
     bool valid = true;
+    bool salida = false;
+};
+
+struct pid_validos {
+  __pid_t pid;
+  bool salida = false;
 };
 
 #endif //RESTORRENTE_TYPES_H

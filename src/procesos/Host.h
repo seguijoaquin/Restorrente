@@ -27,6 +27,7 @@ private:
 
     LockFile* dinerInDoorLock;
     Semaforo* memorySemaphore;
+    Semaforo* semaforoSalidaHosts;
 
     Serializador serializador;
 

@@ -57,12 +57,12 @@ void lanzarEmpleados(__pid_t resto_pid, unsigned int hosts, unsigned int waiters
                     attendant.run();
                 } else {
                   //PROCESO PRINCIPAL
-
+/*
                   SENAL_AVISO_Handler senal_aviso_handler;
                   SignalHandler::getInstance()->registrarHandler(SENAL_AVISO,&senal_aviso_handler);
                   SENAL_SALIDA_Handler senal_salida_handler;
                   SignalHandler::getInstance()->registrarHandler(SENAL_SALIDA,&senal_salida_handler);
-
+*/
 
                   //Espero a que terminen todos los empleados
                   for (int i = 0; i < (hosts + waiters + 1 + 1); ++i) {

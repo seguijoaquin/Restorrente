@@ -30,6 +30,10 @@ void Serializador::serialize(order_t* msgPacket, char *data) {
     bool *s = (bool*)r;
     *s = msgPacket->valid;
     s++;
+
+    bool *t = (bool*)s;
+    *t = msgPacket->salida;
+    t++;
 }
 
 void Serializador::deserialize(char *data, order_t* msgPacket) {
@@ -48,4 +52,8 @@ void Serializador::deserialize(char *data, order_t* msgPacket) {
     bool *s = (bool*)r;
     msgPacket->valid = *s;
     s++;
+
+    bool *t = (bool*)s;
+    msgPacket->salida = *t;
+    t++;
 }

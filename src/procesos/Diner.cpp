@@ -240,7 +240,7 @@ void Diner::leaveRestaurant(bool powerOutage) {
           Logger::getInstance()->insert(KEY_DINER, STRINGS_LAST_DINER);
           this->dinerInDoorFifo->cerrar(); //Cierro el fifo porque ya pasaron todos
           this->ordersFifo->cerrar();
-          kill(restaurant.main_pid, SENAL_AVISO);
+          //kill(restaurant.main_pid, SENAL_AVISO);
       }
   }
 

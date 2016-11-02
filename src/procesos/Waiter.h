@@ -22,6 +22,7 @@ private:
 
     MemoriaCompartida<restaurant_t> sharedMemory;
     Semaforo* memorySemaphore;
+    Semaforo* semaforoSalidaWaiters;
 
     Fifo* ordersFifo; //Lectura
     LockFile* ordersLock;

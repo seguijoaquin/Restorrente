@@ -9,6 +9,7 @@ using namespace std;
 Waiter::Waiter() {
     sharedMemory.crear(FILE_RESTAURANT, KEY_MEMORY);
     this->memorySemaphore = new Semaforo(FILE_RESTAURANT, KEY_MEMORY);
+    this->semaforoSalidaWaiters = new Semaforo(FILE_RESTAURANT, KEY_SALIDA_WAITERS);
 
     this->ordersFifo = new Fifo(ORDERS); //Lectura
     this->ordersLock = new LockFile(ORDERS_LOCK);
@@ -28,22 +29,25 @@ Waiter::~Waiter() {
 
     delete(ordersToCookFifo);
     ordersToCookFifo = NULL;
+
+    delete(semaforoSalidaWaiters);
+    semaforoSalidaWaiters = NULL;
 }
 
 
 void Waiter::run() {
 
-    SENAL_SALIDA_Handler senal_salida_handler;
-    SignalHandler::getInstance()->registrarHandler(SENAL_SALIDA,&senal_salida_handler);
+//    SENAL_SALIDA_Handler senal_salida_handler;
+//    SignalHandler::getInstance()->registrarHandler(SENAL_SALIDA,&senal_salida_handler);
     SignalHandler::getInstance()->registrarHandler(SENAL_CORTE,&this->senal_corte_handler);
 
     //this->ordersToCookFifo->abrir(); NO
     this->ordersFifo->abrir(O_RDONLY);
 
     order_t order;
+    order = searchOrder();
 
-    while (senal_salida_handler.getGracefulQuit() == 0) {
-      order = searchOrder();
+    while (!order.salida) {
         if (order.valid) {
             //std::cout << "[Waiter:" << getpid() <<"] - Recibe order: " << "type: "<< order.type  <<" pid: " << order.pid << std::endl;
             if (order.type == 'd') {
@@ -62,7 +66,12 @@ void Waiter::run() {
                 Logger::getInstance()->insert(KEY_WAITER, "Fallo al buscar una orden");
             }
         }
+        order = searchOrder();
     }
+
+    std::cout << "Sale waiter " << getpid() << std::endl;
+
+    this->semaforoSalidaWaiters->signal();
 
     this->ordersToCookFifo->cerrar();
 

@@ -13,6 +13,7 @@ Host::Host() {
     this->dinerInLivingFifo = new Fifo(DINER_IN_LIVING); //Escritura
     this->dinerInDoorLock = new LockFile(DINER_IN_DOOR_LOCK);
     this->memorySemaphore = new Semaforo(FILE_RESTAURANT, KEY_MEMORY);
+    this->semaforoSalidaHosts = new Semaforo(FILE_RESTAURANT, KEY_SALIDA_HOSTS);
 }
 
 Host::~Host() {
@@ -27,23 +28,24 @@ Host::~Host() {
 
     delete(memorySemaphore);
     memorySemaphore = NULL;
+
+    delete(semaforoSalidaHosts);
+    semaforoSalidaHosts = NULL;
+
 }
 
 void Host::run() {
 
-    SENAL_SALIDA_Handler senal_salida_handler;
+//    SENAL_SALIDA_Handler senal_salida_handler;
     SignalHandler::getInstance()->registrarHandler(SENAL_CORTE, &this->senal_corte_handler);
-    SignalHandler::getInstance()->registrarHandler(SENAL_SALIDA, &senal_salida_handler);
+//    SignalHandler::getInstance()->registrarHandler(SENAL_SALIDA, &senal_salida_handler);
 
     this->dinerInDoorFifo->abrir(O_RDONLY);
 
-    __pid_t dinerPid = 0;
-    while (senal_salida_handler.getGracefulQuit() == 0) {
-
-        dinerPid = 0;
-        dinerPid = searchDinerInDoor();
-
-        if ((dinerPid != 0) && this->senal_corte_handler.luzPrendida()) { //Si cuando voy a buscar un diner nuevo, no tengo EOF
+    __pid_t dinerPid;
+    dinerPid = searchDinerInDoor();
+    while (dinerPid != SALIDA) {
+        if ((dinerPid != 0) && (dinerPid != 9) && this->senal_corte_handler.luzPrendida()) { //Si cuando voy a buscar un diner nuevo, no tengo EOF
             if (dinerCanEnter()) {
                 if (existFreeTable()) {
                     moveDinerToTable(dinerPid);
@@ -54,8 +56,12 @@ void Host::run() {
                 sendOutDiner(dinerPid);
             }
         }
-        sleep(1);
+        dinerPid = searchDinerInDoor();
     }
+
+    this->semaforoSalidaHosts->signal();
+    std::cout << "Sale host " << getpid() << std::endl;
+
     this->dinerInLivingFifo->cerrar();
 }
 
@@ -70,6 +76,10 @@ __pid_t Host::searchDinerInDoor() {
   ssize_t result = dinerInDoorFifo->leer((char*) (&dinerPid), sizeof(__pid_t));
 
   dinerInDoorLock->liberarLock();
+
+  if (dinerPid == SALIDA) {
+    return dinerPid;
+  }
 
   if ((result != 0) && (result != -1)) { //Si el fifo no esta vacio, entonces atiendo a alguien
       Logger::getInstance()->insert(KEY_HOST, STRINGS_SERVE_DINER, (int)dinerPid);
