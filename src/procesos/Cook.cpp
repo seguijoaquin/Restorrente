@@ -18,6 +18,7 @@ Cook::~Cook() {
 }
 
 void Cook::run() {
+  /*
     SENAL_CORTE_Handler senal_corte_handler;
     SENAL_SALIDA_Handler senal_salida_handler;
     SignalHandler::getInstance()->registrarHandler(SENAL_CORTE, &senal_corte_handler);
@@ -40,9 +41,11 @@ void Cook::run() {
     this->ordersFifo->cerrar();
 
     SignalHandler::destruir();
+*/
 }
 
 order_t Cook::searchOrder() {
+/*
   order_t order;
 
   char data[sizeof(order_t)];
@@ -57,17 +60,18 @@ order_t Cook::searchOrder() {
   }
 
   return order;
+*/
 }
 
 void Cook::cookOrder(order_t order) {
-
+/*
   Logger::getInstance()->insert(KEY_COOK, STRINGS_COOKING_ORDER, order.pid);
   sleep(COOK_ORDER_TIME);
-
+*/
 }
 
 void Cook::sendOrder(order_t order) {
-
+/*
   Logger::getInstance()->insert(KEY_COOK, STRINGS_FINISH_ORDER, order.pid);
   order.type = 'c';
 
@@ -77,5 +81,5 @@ void Cook::sendOrder(order_t order) {
   ordersFifo->abrir(O_WRONLY);
   ordersFifo->escribir(data, sizeof(order_t));
   //ordersFifo->cerrar();
-
+*/
 }

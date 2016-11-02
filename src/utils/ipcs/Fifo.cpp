@@ -37,11 +37,11 @@ void Fifo::abrir(int __oflag) {
 
 ssize_t Fifo::escribir(char* dato, size_t datoSize) {
     // se abre el file descriptor para escritura
-/*
+
     if (this->fileDes == -1) {
         this->fileDes = open(this->nombre.c_str(), O_WRONLY);
     }
-*/
+
     // se escriben los datos en el fifo
     ssize_t resultado = write(this->fileDes, (const void *) dato, datoSize);
 
@@ -55,13 +55,15 @@ ssize_t Fifo::escribir(char* dato, size_t datoSize) {
 
 ssize_t Fifo::leer(char* buffer, size_t buffSize) {
     ssize_t resultado = 0;
+    resultado = read(this->fileDes, (void *) buffer, buffSize);
+
 /*
     while (resultado == 0) {
         if (this->fileDes == -1) {
             this->fileDes = open(this->nombre.c_str(), O_RDONLY);
         }
-*/        resultado = read(this->fileDes, (void *) buffer, buffSize);
-/*        if (resultado == 0) {
+        resultado = read(this->fileDes, (void *) buffer, buffSize);
+        if (resultado == 0) {
             cerrar();
         }
 

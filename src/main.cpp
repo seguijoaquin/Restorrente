@@ -159,10 +159,6 @@ int main(int argc, char** argv) {
         fclose(file);
     }
 
-    //TODOS HANDLEAN SIGUSR1
-    SENAL_AVISO_Handler senal_aviso_handler;
-    SignalHandler::getInstance()->registrarHandler(SENAL_AVISO,&senal_aviso_handler);
-
     MemoriaCompartida<restaurant_t> memoriaCompartida;
 
     Semaforo semaforoMemoria(FILE_RESTAURANT,KEY_MEMORY);
@@ -218,6 +214,7 @@ int main(int argc, char** argv) {
       }
 
       if (empleados_pid == getpid()) {
+        //Salgo del wait de los empleados
         imprimirConsulta(&memoriaCompartida);
         __pid_t pid = getpid();
         Logger::getInstance()->insert(KEY_RESTO, STRINGS_DESTROY, (int)pid);
@@ -226,7 +223,7 @@ int main(int argc, char** argv) {
       }
 
       if(comensales_pid == getpid()) {
-        //SALGO DEL MAIN DE LOS DINERS
+        //SALGO DEL WAIT DE LOS DINERS
         dinerInDoor.cerrar();
         orders.cerrar();
       }
@@ -237,3 +234,85 @@ int main(int argc, char** argv) {
     }
     return 0;
 }
+
+
+/*
+
+int main(int argc, char** argv) {
+
+    Fifo orders(ORDERS);
+
+
+    __pid_t empleados_pid = 0;
+    __pid_t comensales_pid = 0;
+
+    int opt = 0;
+    int longIndex;
+
+    __pid_t resto_pid = getpid();
+    opt = getopt_long(argc, argv, optString, longOpts, &longIndex);
+
+    while (opt != -1) {
+        switch (opt) {
+            case 'i':{
+                empleados_pid = getpid();
+
+                std::cout << "Abro orders para Escritura desde " << getpid() << std::endl;
+                orders.abrir(O_WRONLY);
+                std::cout << "Abri orders para Escritura desde " << getpid() << std::endl;
+
+                char escribo = '1';
+                std::cout << "Voy a escribir un 1 " << getpid() << std::endl;
+                ssize_t resultado = orders.escribir( &escribo, sizeof(char));
+                resultado = orders.escribir( &escribo, sizeof(char));
+                resultado = orders.escribir( &escribo, sizeof(char));
+                resultado = orders.escribir( &escribo, sizeof(char));
+                resultado = orders.escribir( &escribo, sizeof(char));
+
+
+                std::cout << "Termino de escribir un 1 " << getpid() << std::endl;
+
+                break;
+            }
+            case 'd': {
+
+                comensales_pid = getpid();
+                //std::cout << "Duermo 5 segundos con " << getpid() << std::endl;
+                //sleep(5);
+
+                std::cout << "Abro orders para Lectura con " << getpid() << std::endl;
+                orders.abrir(O_RDONLY);
+                std::cout << "Abri orders para Lectura con " << getpid() << std::endl;
+
+                sleep(5);
+
+                char leido;
+                std::cout << "Espero para leer con " << getpid() << std::endl;
+                ssize_t result = orders.leer((&leido), sizeof(char));
+                while (result != 0) {
+                  std::cout << "Leido: " << leido << std::endl;
+                  result = orders.leer((&leido), sizeof(char));
+                }
+                if (result == 0) {
+                  std::cout << "Llego al final" << std::endl;
+                }
+
+                break;
+            }
+        }
+        break;
+    }
+
+    if (empleados_pid == getpid()) {
+        orders.cerrar();
+        orders.eliminar();
+    }
+
+    if(comensales_pid == getpid()) {
+        orders.cerrar();
+        orders.eliminar();
+    }
+
+    return 0;
+}
+*/

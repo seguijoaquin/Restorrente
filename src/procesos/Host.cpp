@@ -30,6 +30,7 @@ Host::~Host() {
 }
 
 void Host::run() {
+  /*
     SENAL_SALIDA_Handler senal_salida_handler;
     SignalHandler::getInstance()->registrarHandler(SENAL_CORTE, &this->senal_corte_handler);
     SignalHandler::getInstance()->registrarHandler(SENAL_SALIDA, &senal_salida_handler);
@@ -53,9 +54,11 @@ void Host::run() {
         dinerPid = searchDinerInDoor();
     }
     this->dinerInLivingFifo->cerrar();
+    */
 }
 
 __pid_t Host::searchDinerInDoor() {
+  /*
   __pid_t dinerPid = 0;
 
   //Resto de los diners quedan aca esperando el lock
@@ -72,9 +75,11 @@ __pid_t Host::searchDinerInDoor() {
   } else {
     return 0;//en caso de que el fifo esté vacío, dinerPid es 0
   }
+  */
 }
 
 bool Host::dinerCanEnter() {
+  /*
   bool canEnter = false;
 
   if (this->senal_corte_handler.luzCortada()) {
@@ -95,9 +100,11 @@ bool Host::dinerCanEnter() {
   memorySemaphore->signal();
 
   return canEnter;
+  */
 }
 
 bool Host::existFreeTable() {
+  /*
   bool existFreeTable = false;
 
   memorySemaphore->wait();
@@ -113,10 +120,11 @@ bool Host::existFreeTable() {
   memorySemaphore->signal();
 
   return existFreeTable;
+  */
 }
 
 void Host::moveDinerToTable(__pid_t dinerPid) {
-
+/*
   Logger::getInstance()->insert(KEY_HOST, STRINGS_ASSIGN_TABLE, (int)dinerPid);
   sleep(MOVE_TO_TABLE_TIME);
 
@@ -127,11 +135,11 @@ void Host::moveDinerToTable(__pid_t dinerPid) {
   Fifo dinerFifo (ssDinerFifoName.str());
   dinerFifo.abrir(O_WRONLY);
   dinerFifo.escribir(&response, sizeof(char));
-
+*/
 }
 
 void Host::moveDinerToLiving(__pid_t dinerPid) {
-
+/*
   Logger::getInstance()->insert(KEY_HOST, STRINGS_MOVE_DINER_TO_LIVING, (int)dinerPid);
   sleep(MOVE_TO_LIVING_TIME);
 
@@ -146,11 +154,11 @@ void Host::moveDinerToLiving(__pid_t dinerPid) {
   this->dinerInLivingFifo->abrir(O_WRONLY);
   this->dinerInLivingFifo->escribir((char *) &dinerPid, sizeof(__pid_t));
   //dinerInLivingFifo->cerrar();
-
+*/
 }
 
 void Host::sendOutDiner(__pid_t dinerPid) {
-
+/*
   Logger::getInstance()->insert(KEY_HOST, STRINGS_SEND_OUT, (int)dinerPid);
 
   stringstream ssDinerFifoName;
@@ -160,4 +168,5 @@ void Host::sendOutDiner(__pid_t dinerPid) {
   Fifo dinerFifo(ssDinerFifoName.str());
   dinerFifo.abrir(O_WRONLY);
   dinerFifo.escribir(&response, sizeof(char));
+  */
 }

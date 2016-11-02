@@ -27,6 +27,7 @@ Attendant::~Attendant() {
 
 
 void Attendant::run() {
+  /*
     SENAL_CORTE_Handler senal_corte_handler;
     SENAL_SALIDA_Handler senal_salida_handler;
     SignalHandler::getInstance()->registrarHandler(SENAL_CORTE,&senal_corte_handler);
@@ -40,10 +41,11 @@ void Attendant::run() {
     }
 
     SignalHandler::destruir();
+    */
 }
 
 bool Attendant::asignTable(SENAL_CORTE_Handler senal_corte_handler) {
-
+/*
   __pid_t dinerPid;
 
   //se bloquea esperando leer algo en dinersInLivingFifo
@@ -75,5 +77,5 @@ bool Attendant::asignTable(SENAL_CORTE_Handler senal_corte_handler) {
   } else {
     return false;
   }
-
+*/
 }
