@@ -42,7 +42,6 @@ Diner::~Diner() {
 }
 
 unsigned int Diner::menuPrice() {
-  /*
     unsigned int entrada;
     unsigned int plato_principal;
     unsigned int postre;
@@ -56,11 +55,11 @@ unsigned int Diner::menuPrice() {
     unsigned int resultado = (entrada + plato_principal + bebida + postre);
 
     return resultado;
-    */
+
 }
 
 void Diner::run() {
-  /*
+
     SignalHandler::getInstance()->registrarHandler(SENAL_CORTE, &this->senal_corte_handler);
 
     enterToRestaurant();
@@ -69,7 +68,7 @@ void Diner::run() {
 
     if (hasPlace && senal_corte_handler.luzPrendida()) {
 
-        this->ordersFifo->abrir(O_WRONLY);
+        this->ordersFifo->abrir(O_WRONLY); //Ya fue abierto en proceso que lanza diners
 
         srand(time(NULL));
         int i = 0;
@@ -80,25 +79,25 @@ void Diner::run() {
             ++i;
         }
         pedirLaCuenta();
+        esperoLaFactura();
         pay(); //Verifico si esta la luz prendida adentro de pay, sino no hace nada
     }
     leaveRestaurant(this->senal_corte_handler.luzCortada());
-    */
 }
 
 void Diner::enterToRestaurant() {
-/*
+
   __pid_t pid = getpid();
   Logger::getInstance()->insert(KEY_DINER, STRINGS_ENTER_RESTO);
 
-  this->dinerInDoorFifo->abrir(O_WRONLY);
+  this->dinerInDoorFifo->abrir(O_WRONLY); //Ya fue abierto en proceso que lanza diners
   this->dinerInDoorFifo->escribir((char *) &pid, sizeof(__pid_t));
   this->dinerInDoorFifo->cerrar(); //Ultima vez que escribo en dinerInDoorFifo
-  */
+
 }
 
 bool Diner::waitToSeat() {
-/*
+
   Logger::getInstance()->insert(KEY_DINER, STRINGS_WAITING_FOR_A_TABLE);
 
   this->dinerFifo->abrir(O_RDONLY);
@@ -107,17 +106,17 @@ bool Diner::waitToSeat() {
   //Queda bloqueado hasta que Attendant o Host escriben en Diner_pid_fifo
   ssize_t result = dinerFifo->leer(&wait,sizeof(char));
 
-  if (wait == 1) {
+  if ((wait == 1) && (result > 0)) {
       Logger::getInstance()->insert(KEY_DINER, STRINGS_SEAT);
       return true;
   } else {
       return false;
   }
-  */
+
 }
 
 void Diner::order() {
-/*
+
   sleep(THINK_ORDER_TIME);
 
   __pid_t pid = getpid();
@@ -136,27 +135,30 @@ void Diner::order() {
   //this->ordersFifo->abrir(O_WRONLY);
   ordersFifo->escribir(data, sizeof(order_t));
   //ordersFifo->cerrar();
-*/
+
 }
 
 void Diner::waitOrder() {
-/*
+
   Logger::getInstance()->insert(KEY_DINER, STRINGS_WAITING_ORDER);
   char wait;
   ssize_t result = dinerFifo->leer(&wait, sizeof(char));
-*/
+  if (result < 0) {
+    Logger::getInstance()->insert(KEY_DINER, "Error al leer dinerFifo->waitOrder()");
+    return;
+  }
 }
 
 void Diner::eat() {
-/*
+
   Logger::getInstance()->insert(KEY_DINER, STRINGS_EATING);
   sleep(EAT_TIME);
-*/
+
 }
 
 
 void Diner::pedirLaCuenta() {
-/*
+
   __pid_t pid = getpid();
   Logger::getInstance()->insert(KEY_DINER, "Pide la cuenta a un mozo");
 
@@ -171,21 +173,22 @@ void Diner::pedirLaCuenta() {
   //ordersFifo->abrir(O_WRONLY);
   ordersFifo->escribir(data, sizeof(order_t));
   //ordersFifo->cerrar();
-*/
+
 }
 
 void Diner::esperoLaFactura() {
-/*
+
   char wait;
   ssize_t result = dinerFifo->leer(&wait, sizeof(char));
-*/
+  if (result < 0) {
+    Logger::getInstance()->insert(KEY_DINER, "Error al leer dinerFifo->esperoLaFactura()");
+    return;
+  }
 }
 
 void Diner::pay() {
-/*
-    esperoLaFactura();
 
-    if (this->senal_corte_handler.luzPrendida()) {
+    if (this->senal_corte_handler.luzPrendida()) { //Paga solo si esta la luz prendida
       __pid_t pid = getpid();
       Logger::getInstance()->insert(KEY_DINER, STRINGS_WAITING_TO_PAY);
 
@@ -201,11 +204,11 @@ void Diner::pay() {
       this->ordersFifo->escribir(data, sizeof(order_t));
       this->ordersFifo->cerrar(); //Ultima vez que escribo en ordersFifo antes de salir
     }
-*/
+
 }
 
 void Diner::leaveRestaurant(bool powerOutage) {
-/*
+
   this->leavingLock->tomarLock();
 
   Logger::getInstance()->insert(KEY_DINER, STRINGS_LEAVING);
@@ -244,5 +247,5 @@ void Diner::leaveRestaurant(bool powerOutage) {
   memorySemaphore->signal();
 
   this->leavingLock->liberarLock();
-*/
+
 }

@@ -25,10 +25,10 @@ public:
     virtual int handleSignal ( int signum ) {
         assert ( signum == SENAL_AVISO );
         //std::cout << "Recibo senial aviso: " << getpid() << std::endl;
-        //sleep(1);
+        sleep(2);
         kill(0,SENAL_SALIDA);
-        sleep(1);
-        kill(0,SENAL_SALIDA);
+        //sleep(2);
+        //kill(0,SENAL_SALIDA);
         return 0;
     }
 

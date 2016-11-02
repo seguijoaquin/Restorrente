@@ -32,7 +32,7 @@ Waiter::~Waiter() {
 
 
 void Waiter::run() {
-  /*
+
     SENAL_SALIDA_Handler senal_salida_handler;
     SignalHandler::getInstance()->registrarHandler(SENAL_SALIDA,&senal_salida_handler);
     SignalHandler::getInstance()->registrarHandler(SENAL_CORTE,&this->senal_corte_handler);
@@ -40,9 +40,10 @@ void Waiter::run() {
     //this->ordersToCookFifo->abrir(); NO
     this->ordersFifo->abrir(O_RDONLY);
 
-    order_t order = searchOrder();
+    order_t order;
 
-    while (order.valid && senal_salida_handler.getGracefulQuit() == 0) {
+    while (senal_salida_handler.getGracefulQuit() == 0) {
+      order = searchOrder();
         if (order.valid) {
             //std::cout << "[Waiter:" << getpid() <<"] - Recibe order: " << "type: "<< order.type  <<" pid: " << order.pid << std::endl;
             if (order.type == 'd') {
@@ -61,17 +62,16 @@ void Waiter::run() {
                 Logger::getInstance()->insert(KEY_WAITER, "Fallo al buscar una orden");
             }
         }
-        order = searchOrder();
     }
 
     this->ordersToCookFifo->cerrar();
 
     SignalHandler::destruir();
-    */
+
 }
 
 order_t Waiter::searchOrder() {
-  /*
+
   order_t order;
 
   //Los demas waiters se clavan aca, esperando el lock
@@ -81,21 +81,20 @@ order_t Waiter::searchOrder() {
 
   //El primer waiter se clava aca
   ssize_t result = ordersFifo->leer(data, sizeof(order_t));
+  ordersLock->liberarLock();
 
   serializador.deserialize(data,&order);
 
-  if (result == -1 || result == 0 ) {
+  if (result <= 0 ) {
       order.valid = false;
   }
 
-  ordersLock->liberarLock();
-
   return order;
-  */
+
 }
 
 void Waiter::requestOrder(order_t order) {
-/*
+
   Logger::getInstance()->insert(KEY_WAITER, STRINGS_TAKE_ORDER, order.pid);
   sleep(TAKE_ORDER_TIME);
 
@@ -105,11 +104,11 @@ void Waiter::requestOrder(order_t order) {
   this->ordersToCookFifo->abrir(O_WRONLY);
   this->ordersToCookFifo->escribir(data, sizeof(order_t));
   //this->ordersToCookFifo->cerrar();
-*/
+
 }
 
 void Waiter::hacerLaFactura(order_t order) {
-/*
+
   Logger::getInstance()->insert(KEY_WAITER, "Entrega el ticket al comensal ", order.pid);
 
   stringstream ssDinerFifoName;
@@ -119,12 +118,11 @@ void Waiter::hacerLaFactura(order_t order) {
   Fifo dinerFifo(ssDinerFifoName.str());
   dinerFifo.abrir(O_WRONLY);
   dinerFifo.escribir(&response, sizeof(char));
-  //dinerFifo.cerrar();
-*/
+
 }
 
 void Waiter::chargeOrder(order_t order) {
-/*
+
   memorySemaphore->wait();
 
   restaurant_t restaurant = sharedMemory.leer();
@@ -134,11 +132,11 @@ void Waiter::chargeOrder(order_t order) {
   sharedMemory.escribir(restaurant);
 
   memorySemaphore->signal();
-*/
+
 }
 
 void Waiter::deliverOrder(order_t order) {
-/*
+
   Logger::getInstance()->insert(KEY_WAITER, STRINGS_DISPATCH_ORDER, order.pid);
 
   sleep(DELIVER_ORDER_TIME);
@@ -150,6 +148,5 @@ void Waiter::deliverOrder(order_t order) {
   Fifo dinerFifo(ssDinerFifoName.str());
   dinerFifo.abrir(O_WRONLY);
   dinerFifo.escribir(&response, sizeof(char));
-  //dinerFifo.cerrar();
-*/
+
 }

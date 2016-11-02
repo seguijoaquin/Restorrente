@@ -27,7 +27,7 @@ Attendant::~Attendant() {
 
 
 void Attendant::run() {
-  /*
+
     SENAL_CORTE_Handler senal_corte_handler;
     SENAL_SALIDA_Handler senal_salida_handler;
     SignalHandler::getInstance()->registrarHandler(SENAL_CORTE,&senal_corte_handler);
@@ -35,23 +35,24 @@ void Attendant::run() {
 
     this->dinersInLivingFifo->abrir(O_RDONLY);
 
-    bool salida = asignTable(senal_corte_handler);
-    while (salida && senal_salida_handler.getGracefulQuit() == 0) {
-        salida = asignTable(senal_corte_handler);
+
+    while (senal_salida_handler.getGracefulQuit() == 0) {
+        asignTable(senal_corte_handler);
     }
 
+    this->dinersInLivingFifo->cerrar();
+
     SignalHandler::destruir();
-    */
 }
 
-bool Attendant::asignTable(SENAL_CORTE_Handler senal_corte_handler) {
-/*
+void Attendant::asignTable(SENAL_CORTE_Handler senal_corte_handler) {
+
   __pid_t dinerPid;
 
   //se bloquea esperando leer algo en dinersInLivingFifo
   ssize_t result = dinersInLivingFifo->leer((char*) (&dinerPid), sizeof(__pid_t));
 
-  if ((result != -1) && (result != 0) && (dinerPid != 0) && senal_corte_handler.luzPrendida()) {
+  if ( (result > 0) && senal_corte_handler.luzPrendida()) {
     freeTableSemaphore->wait();
 
     // Actualizo Lista de Comensales
@@ -71,11 +72,7 @@ bool Attendant::asignTable(SENAL_CORTE_Handler senal_corte_handler) {
     Fifo dinerFifo(ssDinerFifoName.str());
     dinerFifo.abrir(O_WRONLY);
     dinerFifo.escribir(&response, sizeof(char));
-    //dinerFifo.cerrar(); //innecesario porque se llama en el destructor
-    return true;
+    
+  } else { return; }
 
-  } else {
-    return false;
-  }
-*/
 }
