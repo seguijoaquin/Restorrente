@@ -69,7 +69,7 @@ void Waiter::run() {
         order = searchOrder();
     }
 
-    std::cout << "Sale waiter " << getpid() << std::endl;
+    //std::cout << "Sale waiter " << getpid() << std::endl;
 
     this->semaforoSalidaWaiters->signal();
 

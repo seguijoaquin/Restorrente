@@ -247,10 +247,10 @@ int main(int argc, char** argv) {
           __pid_t salida = SALIDA;
           for (int i = 0; i < resto.hosts ; ++i) {
             dinerInDoor.escribir((char*) &salida, sizeof(__pid_t));
-            std::cout << "wait host" << i << std::endl;
+            //std::cout << "wait host" << i << std::endl;
             //semHosts->wait();
             //sleep(2);
-            std::cout << "waited host" << i << std::endl;
+            //std::cout << "waited host" << i << std::endl;
           }
           dinerInDoor.cerrar();
 
@@ -261,10 +261,10 @@ int main(int argc, char** argv) {
 
           for (int i = 0; i < resto.waiters ; ++i) {
             orders.escribir(data, sizeof(order_t));
-            std::cout << "wait waiter" << i << std::endl;
+            //std::cout << "wait waiter" << i << std::endl;
             //semWaiters->wait();
             //sleep(2);
-            std::cout << "waited waiter" << i << std::endl;
+            //std::cout << "waited waiter" << i << std::endl;
 
           }
           orders.cerrar();

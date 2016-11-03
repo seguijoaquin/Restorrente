@@ -61,7 +61,7 @@ void Host::run() {
 
     this->semaforoSalidaHosts->signal();
 
-    std::cout << "Sale host " << getpid() << std::endl;
+    //std::cout << "Sale host " << getpid() << std::endl;
 
     this->dinerInLivingFifo->cerrar();
 }

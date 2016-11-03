@@ -13,7 +13,7 @@ Semaforo :: Semaforo ( const std::string& nombre, char key ) {
     //this->id = semget ( clave,1,0666 | IPC_CREAT );
     this->id = init(clave,1);
 
-    std::cout << "Constructor Semaforo " << id << "en proceso :" << getpid() << std::endl;
+    //std::cout << "Constructor Semaforo " << id << "en proceso :" << getpid() << std::endl;
     if (this->id == -1) {
         std::string mensaje = std::string("Error en Constructor Semaforo->semget(): ") + std::string(strerror(errno)) + std::string("\n");
         throw mensaje;
@@ -30,7 +30,7 @@ int Semaforo::init(key_t key, int nsems) { /* key from ftok() */
     semid = semget(key, nsems, IPC_CREAT | IPC_EXCL | 0666);
 
     if (semid >= 0) { /* we got it first */
-        std::cout << "semget valido" << std::endl;
+        //std::cout << "semget valido" << std::endl;
         sb.sem_op = 1; sb.sem_flg = 0;
         arg.val = 1;
 
@@ -46,7 +46,7 @@ int Semaforo::init(key_t key, int nsems) { /* key from ftok() */
         }
 
     } else if (errno == EEXIST) { /* someone else got it first */
-        std::cout << "semget invalido EEXISTS" << std::endl;
+        //std::cout << "semget invalido EEXISTS" << std::endl;
         int ready = 0;
 
         semid = semget(key, nsems, 0); /* get the id */
@@ -95,7 +95,7 @@ int Semaforo :: inicializar (int valorInicial) const {
 }
 
 int Semaforo :: p () const {
-    std::cout << "Hago wait con ps: " << getpid() << " id semaforo: "<< id << std::endl;
+    //std::cout << "Hago wait con ps: " << getpid() << " id semaforo: "<< id << std::endl;
     struct sembuf operacion;
 
     operacion.sem_num = 0;	// numero de semaforo
@@ -108,7 +108,7 @@ int Semaforo :: p () const {
 }
 
 int Semaforo :: v () const {
-    std::cout << "Hago signal con ps: " << getpid() << " id semaforo: "<< id << std::endl;
+    //std::cout << "Hago signal con ps: " << getpid() << " id semaforo: "<< id << std::endl;
     struct sembuf operacion;
 
     operacion.sem_num = 0;	// numero de semaforo
