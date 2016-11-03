@@ -1,11 +1,11 @@
 #include <iostream>
 #include <unistd.h>
 
-#include "types.h"
-#include "MemoriaCompartida.h"
-#include "logger/logger.h"
-#include "logger/mensajes.h"
-#include "constants.h"
+#include "../src/utils/types.h"
+#include "../src/utils/ipcs/MemoriaCompartida.h"
+#include "../src/logger/logger.h"
+#include "../src/logger/mensajes.h"
+#include "../src/utils/constants.h"
 
 #include <sys/types.h>
 #include <signal.h>
@@ -21,6 +21,7 @@ int main(int argc, char** argv) {
         if (consulta_restaurant.isOpen) {
             Logger::getInstance()->info("Señal de corte lanzada");
             killpg(consulta_restaurant.main_pid,SENAL_CORTE);
+            killpg(consulta_restaurant.diners_main_pid,SENAL_CORTE);
         } else {
           Logger::getInstance()->info("Restaurant cerrado - No se puede lanzar señal de corte");
         }

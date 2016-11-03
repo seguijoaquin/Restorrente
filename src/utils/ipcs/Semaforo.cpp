@@ -103,7 +103,7 @@ int Semaforo :: p () const {
     operacion.sem_flg = SEM_UNDO;
 
     int resultado = semop ( this->id,&operacion,1 );
-    if (resultado == -1)     std::cout << "Error en wait(): " << strerror(errno)<< std::endl;
+    if (resultado == -1)   std::cout << "Proceso: "<< getpid() << " Error en wait(): " << strerror(errno)<< std::endl;
     return resultado;
 }
 
@@ -116,7 +116,7 @@ int Semaforo :: v () const {
     operacion.sem_flg = SEM_UNDO;
 
     int resultado = semop ( this->id,&operacion,1 );
-    if (resultado == -1)     std::cout << "Error en signal(): " << strerror(errno)<< std::endl;
+    if (resultado == -1)     std::cout << "Proceso: "<< getpid() << " Error en signal(): " << strerror(errno)<< std::endl;
     return resultado;
 }
 

@@ -36,12 +36,8 @@ Waiter::~Waiter() {
 
 
 void Waiter::run() {
-
-//    SENAL_SALIDA_Handler senal_salida_handler;
-//    SignalHandler::getInstance()->registrarHandler(SENAL_SALIDA,&senal_salida_handler);
     SignalHandler::getInstance()->registrarHandler(SENAL_CORTE,&this->senal_corte_handler);
 
-    //this->ordersToCookFifo->abrir(); NO
     this->ordersFifo->abrir(O_RDONLY);
 
     order_t order;
@@ -103,59 +99,77 @@ order_t Waiter::searchOrder() {
 }
 
 void Waiter::requestOrder(order_t order) {
-
-  Logger::getInstance()->insert(KEY_WAITER, STRINGS_TAKE_ORDER, order.pid);
   sleep(TAKE_ORDER_TIME);
+  if (this->senal_corte_handler.luzPrendida()) {
 
-  char data[sizeof(order_t)];
-  serializador.serialize(&order,data);
+    char data[sizeof(order_t)];
+    serializador.serialize(&order,data);
 
-  this->ordersToCookFifo->abrir(O_WRONLY);
-  this->ordersToCookFifo->escribir(data, sizeof(order_t));
-  //this->ordersToCookFifo->cerrar();
-
+    this->ordersToCookFifo->abrir(O_WRONLY);
+    this->ordersToCookFifo->escribir(data, sizeof(order_t));
+    //this->ordersToCookFifo->cerrar();
+    Logger::getInstance()->insert(KEY_WAITER, STRINGS_TAKE_ORDER, order.pid);
+  } else {
+    stringstream ssDinerFifoName;
+    ssDinerFifoName << DINERS_FIFO << order.pid;
+    char response;
+    Fifo dinerFifo(ssDinerFifoName.str());
+    dinerFifo.abrir(O_WRONLY);
+    response = NO_HAY_LUZ;
+    while (dinerFifo.escribir(&response, sizeof(char) != -1)) {
+      sleep(1);
+    }
+    Logger::getInstance()->insert(KEY_WAITER, "Comunica que no hay luz al Diner: ", order.pid);
+  }
 }
 
 void Waiter::hacerLaFactura(order_t order) {
 
-  Logger::getInstance()->insert(KEY_WAITER, "Entrega el ticket al comensal ", order.pid);
+  if (this->senal_corte_handler.luzPrendida()) {
+    Logger::getInstance()->insert(KEY_WAITER, "Entrega el ticket al comensal ", order.pid);
 
-  stringstream ssDinerFifoName;
-  ssDinerFifoName << DINERS_FIFO << order.pid;
+    stringstream ssDinerFifoName;
+    ssDinerFifoName << DINERS_FIFO << order.pid;
 
-  char response = 1;
-  Fifo dinerFifo(ssDinerFifoName.str());
-  dinerFifo.abrir(O_WRONLY);
-  dinerFifo.escribir(&response, sizeof(char));
-
+    char response = 1;
+    Fifo dinerFifo(ssDinerFifoName.str());
+    dinerFifo.abrir(O_WRONLY);
+    dinerFifo.escribir(&response, sizeof(char));
+  }
 }
 
 void Waiter::chargeOrder(order_t order) {
 
-  memorySemaphore->wait();
+  if (this->senal_corte_handler.luzPrendida()) {
+    if (memorySemaphore->wait() != -1) {
+      restaurant_t restaurant = sharedMemory.leer();
+      restaurant.cash += order.toPay;
+      Logger::getInstance()->insert(KEY_WAITER, "Recibe $", order.toPay);
+      Logger::getInstance()->insert(KEY_WAITER, STRINGS_MONEY_IN_CASH, restaurant.cash);
+      sharedMemory.escribir(restaurant);
+    }
 
-  restaurant_t restaurant = sharedMemory.leer();
-  restaurant.cash += order.toPay;
-  Logger::getInstance()->insert(KEY_WAITER, "Recibe $", order.toPay);
-  Logger::getInstance()->insert(KEY_WAITER, STRINGS_MONEY_IN_CASH, restaurant.cash);
-  sharedMemory.escribir(restaurant);
-
-  memorySemaphore->signal();
-
+    memorySemaphore->signal();
+  }
 }
 
 void Waiter::deliverOrder(order_t order) {
-
-  Logger::getInstance()->insert(KEY_WAITER, STRINGS_DISPATCH_ORDER, order.pid);
+  stringstream ssDinerFifoName;
+  ssDinerFifoName << DINERS_FIFO << order.pid;
+  char response;
+  Fifo dinerFifo(ssDinerFifoName.str());
+  dinerFifo.abrir(O_WRONLY);
 
   sleep(DELIVER_ORDER_TIME);
 
-  stringstream ssDinerFifoName;
-  ssDinerFifoName << DINERS_FIFO << order.pid;
+  if (this->senal_corte_handler.luzPrendida()) {
 
-  char response = 1;
-  Fifo dinerFifo(ssDinerFifoName.str());
-  dinerFifo.abrir(O_WRONLY);
-  dinerFifo.escribir(&response, sizeof(char));
+    response = PLATO_COMIDA;
+    dinerFifo.escribir(&response, sizeof(char));
+    Logger::getInstance()->insert(KEY_WAITER, STRINGS_DISPATCH_ORDER, order.pid);
+  } else {
+    response = NO_HAY_LUZ;
+    dinerFifo.escribir(&response, sizeof(char));
+  }
 
 }

@@ -29,9 +29,7 @@ Attendant::~Attendant() {
 void Attendant::run() {
 
     SENAL_CORTE_Handler senal_corte_handler;
-//    SENAL_SALIDA_Handler senal_salida_handler;
     SignalHandler::getInstance()->registrarHandler(SENAL_CORTE,&senal_corte_handler);
-//    SignalHandler::getInstance()->registrarHandler(SENAL_SALIDA,&senal_salida_handler);
 
     this->dinersInLivingFifo->abrir(O_RDONLY);
 
@@ -51,31 +49,39 @@ bool Attendant::asignTable(SENAL_CORTE_Handler senal_corte_handler) {
   //se bloquea esperando leer algo en dinersInLivingFifo
   ssize_t result = dinersInLivingFifo->leer((char*) (&dinerPid), sizeof(__pid_t));
 
-  if ( (result > 0) && senal_corte_handler.luzPrendida() && (dinerPid != SALIDA)) {
-    freeTableSemaphore->wait();
+  if (dinerPid == SALIDA) return false;
 
-    // Actualizo Lista de Comensales
-    memorySemaphore->wait();
-    restaurant_t restaurant = sharedMemory.leer();
-    if (restaurant.dinersInLiving > 0) restaurant.dinersInLiving--;
-    sharedMemory.escribir(restaurant);
-    memorySemaphore->signal();
+  if ( (result > 0) && senal_corte_handler.luzPrendida()) {
+    if (freeTableSemaphore->wait() != -1) {
 
-    //Enivo Mensaje a Comensal
-    Logger::getInstance()->insert(KEY_ATTENDANT,STRINGS_ASSIGN_TABLE, dinerPid);
+      // Actualizo Lista de Comensales
+      if (memorySemaphore->wait() != -1) {
 
-    stringstream ssDinerFifoName;
-    ssDinerFifoName << DINERS_FIFO << dinerPid;
+        restaurant_t restaurant = sharedMemory.leer();
+        if (restaurant.dinersInLiving > 0) restaurant.dinersInLiving--;
+        sharedMemory.escribir(restaurant);
+        memorySemaphore->signal();
 
-    char response = 1;
-    Fifo dinerFifo(ssDinerFifoName.str());
-    dinerFifo.abrir(O_WRONLY);
-    dinerFifo.escribir(&response, sizeof(char));
+        //Enivo Mensaje a Comensal
+        Logger::getInstance()->insert(KEY_ATTENDANT,STRINGS_ASSIGN_TABLE, dinerPid);
 
-    return true;
+        stringstream ssDinerFifoName;
+        ssDinerFifoName << DINERS_FIFO << dinerPid;
 
-  } else {
-    return false;
+        char response = 1;
+        Fifo dinerFifo(ssDinerFifoName.str());
+        dinerFifo.abrir(O_WRONLY);
+        dinerFifo.escribir(&response, sizeof(char));
+      } else {
+        memorySemaphore->signal();
+      }
+    } else {
+      freeTableSemaphore->signal();
+    }
+
+
   }
+
+  return true;
 
 }

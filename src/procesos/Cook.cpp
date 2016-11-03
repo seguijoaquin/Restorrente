@@ -1,4 +1,4 @@
-//
+ //
 // Created by joaquin on 28/10/16.
 //
 
@@ -34,6 +34,14 @@ void Cook::run() {
         if (order.valid && senal_corte_handler.luzPrendida()) {
             cookOrder(order);
             sendOrder(order);
+          } else {
+            if(order.valid) {              
+              order.type = 'c';
+              char data[sizeof(order_t)];
+              serializador.serialize(&order,data);
+              ordersFifo->abrir(O_WRONLY);
+              ordersFifo->escribir(data, sizeof(order_t));
+            }
           }
           order  = searchOrder();
     }

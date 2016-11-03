@@ -36,34 +36,32 @@ Host::~Host() {
 
 void Host::run() {
 
-//    SENAL_SALIDA_Handler senal_salida_handler;
-    SignalHandler::getInstance()->registrarHandler(SENAL_CORTE, &this->senal_corte_handler);
-//    SignalHandler::getInstance()->registrarHandler(SENAL_SALIDA, &senal_salida_handler);
+  SignalHandler::getInstance()->registrarHandler(SENAL_CORTE, &this->senal_corte_handler);
 
-    this->dinerInDoorFifo->abrir(O_RDONLY);
+  this->dinerInDoorFifo->abrir(O_RDONLY);
 
-    __pid_t dinerPid;
-    dinerPid = searchDinerInDoor();
-    while (dinerPid != SALIDA) {
-        if ((dinerPid != 0) && (dinerPid != 9) && this->senal_corte_handler.luzPrendida()) { //Si cuando voy a buscar un diner nuevo, no tengo EOF
-            if (dinerCanEnter()) {
-                if (existFreeTable()) {
-                    moveDinerToTable(dinerPid);
-                } else {
-                    moveDinerToLiving(dinerPid);
-                }
-            } else {
-                sendOutDiner(dinerPid);
-            }
-        }
-        dinerPid = searchDinerInDoor();
-    }
+  __pid_t dinerPid;
+  dinerPid = searchDinerInDoor();
+  while (dinerPid != SALIDA) {
+      if ((dinerPid != 0) && (dinerPid != 9) && this->senal_corte_handler.luzPrendida()) { //Si cuando voy a buscar un diner nuevo, no tengo EOF
+          if (dinerCanEnter()) {
+              if (existFreeTable()) {
+                  moveDinerToTable(dinerPid);
+              } else {
+                  moveDinerToLiving(dinerPid);
+              }
+          } else {
+              sendOutDiner(dinerPid);
+          }
+      }
+      dinerPid = searchDinerInDoor();
+  }
 
-    this->semaforoSalidaHosts->signal();
+  this->semaforoSalidaHosts->signal();
 
-    //std::cout << "Sale host " << getpid() << std::endl;
+  //std::cout << "Sale host " << getpid() << std::endl;
 
-    this->dinerInLivingFifo->cerrar();
+  this->dinerInLivingFifo->cerrar();
 }
 
 __pid_t Host::searchDinerInDoor() {
@@ -99,15 +97,15 @@ bool Host::dinerCanEnter() {
       return false;
   }
 
-  memorySemaphore->wait();
+  if (memorySemaphore->wait() != -1) {
+    restaurant_t restaurant = sharedMemory.leer();
 
-  restaurant_t restaurant = sharedMemory.leer();
-
-  if (restaurant.diners < restaurant.diners_total) {
+    if (restaurant.diners < restaurant.diners_total) {
       restaurant.diners++;
       restaurant.dinersInRestaurant++;
       sharedMemory.escribir(restaurant);
       canEnter = true;
+    }
   }
 
   memorySemaphore->signal();
@@ -120,14 +118,14 @@ bool Host::existFreeTable() {
 
   bool existFreeTable = false;
 
-  memorySemaphore->wait();
+  if (memorySemaphore->wait() != -1) {
+    restaurant_t restaurant = sharedMemory.leer();
 
-  restaurant_t restaurant = sharedMemory.leer();
-
-  if (restaurant.tables > restaurant.busyTables) {
+    if (restaurant.tables > restaurant.busyTables) {
       restaurant.busyTables++;
       sharedMemory.escribir(restaurant);
       existFreeTable = true;
+    }
   }
 
   memorySemaphore->signal();
@@ -156,11 +154,11 @@ void Host::moveDinerToLiving(__pid_t dinerPid) {
   Logger::getInstance()->insert(KEY_HOST, STRINGS_MOVE_DINER_TO_LIVING, (int)dinerPid);
   sleep(MOVE_TO_LIVING_TIME);
 
-  memorySemaphore->wait();
-
-  restaurant_t restaurant = this->sharedMemory.leer();
-  restaurant.dinersInLiving++;
-  this->sharedMemory.escribir(restaurant);
+  if (memorySemaphore->wait() != -1) {
+    restaurant_t restaurant = this->sharedMemory.leer();
+    restaurant.dinersInLiving++;
+    this->sharedMemory.escribir(restaurant);
+  }
 
   memorySemaphore->signal();
 

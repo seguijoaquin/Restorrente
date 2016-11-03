@@ -48,7 +48,7 @@ ssize_t Fifo::escribir(char* dato, size_t datoSize) {
 
     if (resultado == -1) {
       std::string mensaje = std::string("Error en Fifo->leer(): ") + std::string(strerror(errno)) + std::string("\n");
-      throw mensaje;
+      //throw mensaje;
     } else {
       //std::cout << "Escribo " << resultado << "bytes en fifo " << this->nombre << "con ps: "<< getpid() << std::endl;
     }
@@ -77,7 +77,7 @@ ssize_t Fifo::leer(char* buffer, size_t buffSize) {
 
     if (resultado == -1) {
       std::string mensaje = std::string("Error en Fifo->leer(): ") + std::string(strerror(errno)) + std::string("\n");
-      throw mensaje;
+      //throw mensaje;
     } else {
       //std::cout << "Leo " << resultado << "bytes en fifo " << this->nombre << "con ps: "<< getpid() << std::endl;
     }

@@ -49,13 +49,16 @@
 //#define FILE_CONFIG "/tmp/resto/config.json"
 
 #define SENAL_CORTE SIGCHLD
-#define SENAL_SALIDA SIGUSR2
+#define SENAL_SALIDA SIGCHLD
 #define SENAL_AVISO SIGUSR1
 
 #define LUZ_CORTADA 1
 #define LUZ_PRENDIDA 0
 
 #define SALIDA 9
+
+#define NO_HAY_LUZ 2
+#define PLATO_COMIDA 1
 
 
 #endif //RESTORRENTE_CONSTANTS_H

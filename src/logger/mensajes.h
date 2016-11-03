@@ -16,7 +16,7 @@
 #define STRINGS_ENTER_RESTO "Entra al restaurant"
 #define STRINGS_WAITING_FOR_A_TABLE "Espera por una mesa"
 #define STRINGS_SEAT "Esta sentado"
-#define STRINGS_WAITING_TO_ORDER "Espera a un mozo para ordenar"
+#define STRINGS_WAITING_TO_ORDER "Hizo un pedido"
 #define STRINGS_WAITING_ORDER "Espera su pedido"
 #define STRINGS_EATING "Esta comiendo"
 #define STRINGS_WAITING_TO_PAY "Paga la cuenta"

@@ -30,10 +30,10 @@ public:
         assert ( signum == SENAL_CORTE );
         if (this->getGracefulQuit() == LUZ_PRENDIDA) {
             this->gracefulQuit = LUZ_CORTADA;
-            Logger::getInstance()->info("SE CORTA LA LUZ");
+            //Logger::getInstance()->info("SE CORTA LA LUZ");
         } else {
             this->gracefulQuit = LUZ_PRENDIDA;
-            Logger::getInstance()->info("VUELVE LA LUZ");
+            //Logger::getInstance()->info("VUELVE LA LUZ");
         }
 
         return 0;
