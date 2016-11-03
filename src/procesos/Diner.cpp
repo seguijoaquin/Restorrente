@@ -82,7 +82,7 @@ void Diner::run() {
         esperoLaFactura();
         pay(); //Verifico si esta la luz prendida adentro de pay, sino no hace nada
     }
-    leaveRestaurant(this->senal_corte_handler.luzCortada());
+    leaveRestaurant(this->senal_corte_handler.luzCortada(),hasPlace);
 }
 
 void Diner::enterToRestaurant() {
@@ -209,11 +209,15 @@ void Diner::pay() {
 
 }
 
-void Diner::leaveRestaurant(bool powerOutage) {
-
-  this->leavingLock->tomarLock();
+void Diner::leaveRestaurant(bool powerOutage, bool hasPlace) {
 
   Logger::getInstance()->insert(KEY_DINER, STRINGS_LEAVING);
+
+  if (!hasPlace) {
+    return;
+  }
+
+  this->leavingLock->tomarLock();
 
   memorySemaphore->wait();
   restaurant_t restaurant = this->sharedMemory.leer();

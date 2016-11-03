@@ -11,11 +11,11 @@ struct restaurant_t {
     __pid_t main_pid;
     __pid_t diners_main_pid;
     unsigned int tables;
-    unsigned int busyTables;
-    unsigned int dinersInLiving;
+    int busyTables;
+    int dinersInLiving;
     unsigned int cash;
-    unsigned int diners;
-    unsigned int dinersInRestaurant;
+    int diners;
+    int dinersInRestaurant;
     unsigned int money_not_cashed;
     unsigned int hosts;
     unsigned int waiters;

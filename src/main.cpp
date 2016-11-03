@@ -236,10 +236,13 @@ int main(int argc, char** argv) {
       if(comensales_pid == getpid()) {
         restaurant_t resto = memoriaCompartida.leer();
 
-        Semaforo* semHosts = new Semaforo(FILE_RESTAURANT,KEY_SALIDA_HOSTS);
-        Semaforo* semWaiters = new Semaforo(FILE_RESTAURANT,KEY_SALIDA_WAITERS);
-
+        std::cout << "resto diners: " << resto.diners << std::endl;
+        std::cout << "resto diners_total: " << resto.diners_total << std::endl;
+        std::cout << "resto dinersInRestaurant: " << resto.dinersInRestaurant << std::endl;
         if (resto.diners >= resto.diners_total && resto.dinersInRestaurant == 0) {
+
+          Semaforo* semHosts = new Semaforo(FILE_RESTAURANT,KEY_SALIDA_HOSTS);
+          Semaforo* semWaiters = new Semaforo(FILE_RESTAURANT,KEY_SALIDA_WAITERS);
           //SALGO DEL WAIT DE LOS DINERS
           __pid_t salida = SALIDA;
           for (int i = 0; i < resto.hosts ; ++i) {

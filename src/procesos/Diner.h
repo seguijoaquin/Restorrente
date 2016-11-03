@@ -54,7 +54,7 @@ private:
     void pedirLaCuenta();
     void esperoLaFactura();
     void pay();
-    void leaveRestaurant(bool powerOutage);
+    void leaveRestaurant(bool powerOutage, bool hasPlace);
     int repeatOrder() {
         return 1;
         //return rand() % 3 + 1;
