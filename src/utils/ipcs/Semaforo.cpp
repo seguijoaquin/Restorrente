@@ -73,7 +73,7 @@ int Semaforo::init(key_t key, int nsems) { /* key from ftok() */
 }
 
 Semaforo::~Semaforo() {
-    std::cout << "Destructor Semaforo " << id << "en proceso :" << getpid() << std::endl;
+    //std::cout << "Destructor Semaforo " << id << "en proceso :" << getpid() << std::endl;
 }
 
 int Semaforo :: inicializar (int valorInicial) const {
@@ -95,7 +95,7 @@ int Semaforo :: inicializar (int valorInicial) const {
 }
 
 int Semaforo :: p () const {
-    std::cout << "Hago wait con ps: " << getpid() << "id semaforo: "<< id << std::endl;
+    std::cout << "Hago wait con ps: " << getpid() << " id semaforo: "<< id << std::endl;
     struct sembuf operacion;
 
     operacion.sem_num = 0;	// numero de semaforo
@@ -108,7 +108,7 @@ int Semaforo :: p () const {
 }
 
 int Semaforo :: v () const {
-    std::cout << "Hago wait con ps: " << getpid() << "id semaforo: "<< id << std::endl;
+    std::cout << "Hago signal con ps: " << getpid() << " id semaforo: "<< id << std::endl;
     struct sembuf operacion;
 
     operacion.sem_num = 0;	// numero de semaforo

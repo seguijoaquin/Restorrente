@@ -196,7 +196,7 @@ int main(int argc, char** argv) {
                 //Al iniciar el resto, debo inicialir los semaforos y memoriaCompartida, sino no
                 semaforoMemoria.inicializar(1);
                 semaforoMesas.inicializar(0);
-                semaforoSalidaHosts.inicializar(0);
+                semaforoSalidaHosts.inicializar(1);
                 semaforoSalidaWaiters.inicializar(0);
                 inicializar(&memoriaCompartida);
 
@@ -236,13 +236,16 @@ int main(int argc, char** argv) {
       if(comensales_pid == getpid()) {
         restaurant_t resto = memoriaCompartida.leer();
 
+        Semaforo* semHosts = new Semaforo(FILE_RESTAURANT,KEY_SALIDA_HOSTS);
+        Semaforo* semWaiters = new Semaforo(FILE_RESTAURANT,KEY_SALIDA_WAITERS);
+
         if (resto.diners >= resto.diners_total && resto.dinersInRestaurant == 0) {
           //SALGO DEL WAIT DE LOS DINERS
           __pid_t salida = SALIDA;
           for (int i = 0; i < resto.hosts ; ++i) {
             dinerInDoor.escribir((char*) &salida, sizeof(__pid_t));
             std::cout << "wait host" << i << std::endl;
-            semaforoSalidaHosts.wait();
+            semHosts->wait();
             //sleep(2);
             std::cout << "waited host" << i << std::endl;
           }
@@ -256,7 +259,7 @@ int main(int argc, char** argv) {
           for (int i = 0; i < resto.waiters ; ++i) {
             orders.escribir(data, sizeof(order_t));
             std::cout << "wait waiter" << i << std::endl;
-            semaforoSalidaWaiters.wait();
+            semWaiters->wait();
             //sleep(2);
             std::cout << "waited waiter" << i << std::endl;
 
@@ -268,6 +271,9 @@ int main(int argc, char** argv) {
 
           ordersToCook.escribir(data,sizeof(order_t));
           ordersToCook.cerrar();
+
+          delete(semHosts);
+          delete(semWaiters);
         }
 
       }

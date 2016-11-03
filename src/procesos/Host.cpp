@@ -13,7 +13,7 @@ Host::Host() {
     this->dinerInLivingFifo = new Fifo(DINER_IN_LIVING); //Escritura
     this->dinerInDoorLock = new LockFile(DINER_IN_DOOR_LOCK);
     this->memorySemaphore = new Semaforo(FILE_RESTAURANT, KEY_MEMORY);
-    this->semaforoSalidaHosts = new Semaforo(FILE_RESTAURANT, KEY_SALIDA_HOSTS);
+    this->semaforoSalidaHosts = new Semaforo(FILE_RESTAURANT,KEY_SALIDA_HOSTS);
 }
 
 Host::~Host() {
@@ -60,6 +60,7 @@ void Host::run() {
     }
 
     this->semaforoSalidaHosts->signal();
+
     std::cout << "Sale host " << getpid() << std::endl;
 
     this->dinerInLivingFifo->cerrar();
