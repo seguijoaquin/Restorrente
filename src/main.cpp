@@ -196,7 +196,7 @@ int main(int argc, char** argv) {
                 //Al iniciar el resto, debo inicialir los semaforos y memoriaCompartida, sino no
                 semaforoMemoria.inicializar(1);
                 semaforoMesas.inicializar(0);
-                semaforoSalidaHosts.inicializar(1);
+                semaforoSalidaHosts.inicializar(0);
                 semaforoSalidaWaiters.inicializar(0);
                 inicializar(&memoriaCompartida);
 
@@ -245,7 +245,7 @@ int main(int argc, char** argv) {
           for (int i = 0; i < resto.hosts ; ++i) {
             dinerInDoor.escribir((char*) &salida, sizeof(__pid_t));
             std::cout << "wait host" << i << std::endl;
-            semHosts->wait();
+            //semHosts->wait();
             //sleep(2);
             std::cout << "waited host" << i << std::endl;
           }
@@ -259,7 +259,7 @@ int main(int argc, char** argv) {
           for (int i = 0; i < resto.waiters ; ++i) {
             orders.escribir(data, sizeof(order_t));
             std::cout << "wait waiter" << i << std::endl;
-            semWaiters->wait();
+            //semWaiters->wait();
             //sleep(2);
             std::cout << "waited waiter" << i << std::endl;
 
