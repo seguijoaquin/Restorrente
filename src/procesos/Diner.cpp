@@ -82,6 +82,8 @@ void Diner::run() {
         pay(); //Verifico si esta la luz prendida adentro de pay, sino no hace nada
     }
     leaveRestaurant(this->senal_corte_handler.luzCortada(),hasPlace);
+
+    SignalHandler::destruir();
 }
 
 void Diner::enterToRestaurant() {
@@ -105,13 +107,17 @@ bool Diner::waitToSeat() {
   //Queda bloqueado hasta que Attendant o Host escriben en Diner_pid_fifo
   ssize_t result = dinerFifo->leer(&wait,sizeof(char));
 
+  while (result <= 0) {
+    Logger::getInstance()->insert(KEY_DINER, "Error al leer dinerFifo->waitToSeat()");
+    result = dinerFifo->leer(&wait, sizeof(char));
+  }
+
   if ((wait == 1) && (result > 0)) {
       Logger::getInstance()->insert(KEY_DINER, STRINGS_SEAT);
       return true;
   } else {
       return false;
   }
-
 }
 
 void Diner::order() {
@@ -127,6 +133,7 @@ void Diner::order() {
     order.pid = pid;
     order.type = 'd';
     order.toPay = 0;
+    order.salida = false;
 
     char data[sizeof(order_t)];
     serializador.serialize(&order,data);
@@ -140,12 +147,12 @@ void Diner::order() {
 
 void Diner::waitOrder() {
     char wait;
-    std::cout << "Esperando waitOrder con Diner: " << getpid()  << std::endl;
     ssize_t result = dinerFifo->leer(&wait, sizeof(char));
-    std::cout << "Ya pase waitOrder con Diner: " << getpid()  << std::endl;
-    if (result <= 0) {
+
+    while (result <= 0) {
       Logger::getInstance()->insert(KEY_DINER, "Error al leer dinerFifo->waitOrder()");
-      return;
+      result = dinerFifo->leer(&wait, sizeof(char));
+      //return;
     }
     if (wait != NO_HAY_LUZ) {
       Logger::getInstance()->insert(KEY_DINER, STRINGS_WAITING_ORDER);
@@ -171,6 +178,7 @@ void Diner::pedirLaCuenta() {
     order.pid = pid;
     order.type = 'b';
     order.toPay = 0;
+    order.salida = false;
 
     char data[sizeof(order_t)];
     serializador.serialize(&order,data);
@@ -185,7 +193,10 @@ void Diner::pedirLaCuenta() {
 void Diner::esperoLaFactura() {
   if (this->senal_corte_handler.luzPrendida()) {
     char wait;
-    ssize_t result = dinerFifo->leer(&wait, sizeof(char)); //ACA SALTA ERROR
+    ssize_t result = dinerFifo->leer(&wait, sizeof(char));
+    while (result <= 0) {
+      result = dinerFifo->leer(&wait, sizeof(char));
+    }
     if (result <= 0) {
       Logger::getInstance()->insert(KEY_DINER, "Error al leer dinerFifo->esperoLaFactura()");
       return;
@@ -203,6 +214,7 @@ void Diner::pay() {
       order.pid = pid;
       order.type = 'p';
       order.toPay = this->toPay;
+      order.salida = false;
 
       char data[sizeof(order_t)];
       serializador.serialize(&order,data);
@@ -225,7 +237,6 @@ void Diner::leaveRestaurant(bool powerOutage, bool hasPlace) {
   if(memorySemaphore->wait() != -1) {
     restaurant_t restaurant = this->sharedMemory.leer();
 
-    std::cout << "Reduzco dinersInRestaurant con diner: " << getpid() << std::endl;
     restaurant.dinersInRestaurant--;
 
     if (!powerOutage && restaurant.dinersInLiving > 0) {

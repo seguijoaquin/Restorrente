@@ -53,6 +53,10 @@ void Host::run() {
           } else {
               sendOutDiner(dinerPid);
           }
+      } else {
+        if ((dinerPid != 0) && (dinerPid != 9) && this->senal_corte_handler.luzCortada()) {
+          sendOutDiner(dinerPid);
+        }
       }
       dinerPid = searchDinerInDoor();
   }
@@ -62,6 +66,8 @@ void Host::run() {
   //std::cout << "Sale host " << getpid() << std::endl;
 
   this->dinerInLivingFifo->cerrar();
+
+  SignalHandler::destruir();
 }
 
 __pid_t Host::searchDinerInDoor() {
@@ -73,6 +79,9 @@ __pid_t Host::searchDinerInDoor() {
 
   //1º - Abrir, clavar aca al host
   ssize_t result = dinerInDoorFifo->leer((char*) (&dinerPid), sizeof(__pid_t));
+  while (result <= 0) {
+    result = dinerInDoorFifo->leer((char*) (&dinerPid), sizeof(__pid_t));
+  }
 
   dinerInDoorLock->liberarLock();
 
@@ -158,12 +167,13 @@ void Host::moveDinerToLiving(__pid_t dinerPid) {
     restaurant_t restaurant = this->sharedMemory.leer();
     restaurant.dinersInLiving++;
     this->sharedMemory.escribir(restaurant);
+    memorySemaphore->signal();
+
+    this->dinerInLivingFifo->abrir(O_WRONLY);
+    this->dinerInLivingFifo->escribir((char *) &dinerPid, sizeof(__pid_t));
+  } else {
+    memorySemaphore->signal();
   }
-
-  memorySemaphore->signal();
-
-  this->dinerInLivingFifo->abrir(O_WRONLY);
-  this->dinerInLivingFifo->escribir((char *) &dinerPid, sizeof(__pid_t));
   //dinerInLivingFifo->cerrar();
 
 }

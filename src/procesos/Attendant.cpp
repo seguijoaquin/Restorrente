@@ -33,8 +33,10 @@ void Attendant::run() {
 
     this->dinersInLivingFifo->abrir(O_RDONLY);
 
-    while (asignTable(senal_corte_handler)) {
-      sleep(1);
+    bool salida = asignTable(senal_corte_handler);
+    while (salida) {
+      salida = asignTable(senal_corte_handler);
+      //sleep(1);
     }
 
     this->dinersInLivingFifo->cerrar();
@@ -48,12 +50,23 @@ bool Attendant::asignTable(SENAL_CORTE_Handler senal_corte_handler) {
 
   //se bloquea esperando leer algo en dinersInLivingFifo
   ssize_t result = dinersInLivingFifo->leer((char*) (&dinerPid), sizeof(__pid_t));
+  while (result <= 0) {
+    result = dinersInLivingFifo->leer((char*) (&dinerPid), sizeof(__pid_t));
+  }
 
-  if (dinerPid == SALIDA) return false;
+  if ((result > 0) && (dinerPid == SALIDA)) {
+    //std::cout << "Me voy Attendant" << std::endl;
+    return false;
+  }
+
+  //Logger::getInstance()->insert(KEY_ATTENDANT,"Recibo a Diner: ", dinerPid);
+  //if (senal_corte_handler.luzPrendida()) std::cout << "Luz prendida" << std::endl;
+  //if (senal_corte_handler.luzCortada()) std::cout << "Luz cortada" << std::endl;
 
   if ( (result > 0) && senal_corte_handler.luzPrendida()) {
+    //std::cout << "Antes de freeTableSemaphore" << std::endl;
     if (freeTableSemaphore->wait() != -1) {
-
+      //std::cout << "Antes de memorySemaphore" << std::endl;
       // Actualizo Lista de Comensales
       if (memorySemaphore->wait() != -1) {
 
@@ -73,13 +86,34 @@ bool Attendant::asignTable(SENAL_CORTE_Handler senal_corte_handler) {
         dinerFifo.abrir(O_WRONLY);
         dinerFifo.escribir(&response, sizeof(char));
       } else {
+        //std::cout << "Error en memorySemaphore" << std::endl;
         memorySemaphore->signal();
       }
     } else {
+      //std::cout << "Error en freeTableSemaphore" << std::endl;
+      //Comunico que se tiene que ir el diner aunque tenga error en semaforo porque no puede entrar y no lo puedo saltear
+      stringstream ssDinerFifoName;
+      ssDinerFifoName << DINERS_FIFO << dinerPid;
+
+      char response = 0;
+      Fifo dinerFifo(ssDinerFifoName.str());
+      dinerFifo.abrir(O_WRONLY);
+      while (dinerFifo.escribir(&response, sizeof(char)) == -1) {}
+      Logger::getInstance()->insert(KEY_ATTENDANT,"Comunico que no hay luz al Diner: ", dinerPid);
       freeTableSemaphore->signal();
     }
 
+  } else {
+    //Si la luz está apagada le aviso al Diner que no puede sentarse
+      //std::cout << "Entro al else" << std::endl;
+      stringstream ssDinerFifoName;
+      ssDinerFifoName << DINERS_FIFO << dinerPid;
 
+      char response = 0;
+      Fifo dinerFifo(ssDinerFifoName.str());
+      dinerFifo.abrir(O_WRONLY);
+      while (dinerFifo.escribir(&response, sizeof(char)) == -1) {}
+      Logger::getInstance()->insert(KEY_ATTENDANT,"Comunico que no hay luz al Diner: ", dinerPid);
   }
 
   return true;

@@ -145,7 +145,7 @@ int main(int argc, char** argv) {
                 comensales_pid = getpid();
                 resto.diners_main_pid = comensales_pid;
                 memoriaCompartida.escribir(resto);
-                
+
                 if (resto.isOpen) {
                   dinerInDoor.abrir(O_WRONLY); //Abro para que arranquen los HOSTS y se traben al leer fifo vacio
                   orders.abrir(O_WRONLY); //Abro para que arranquen los waiters y se traben al leer fifo vacio
@@ -174,10 +174,9 @@ int main(int argc, char** argv) {
       if(comensales_pid == getpid()) {
         restaurant_t resto = memoriaCompartida.leer();
 
-        std::cout << "resto diners: " << resto.diners << std::endl;
-        std::cout << "resto diners_total: " << resto.diners_total << std::endl;
-        std::cout << "resto dinersInRestaurant: " << resto.dinersInRestaurant << std::endl;
-        if (resto.diners >= resto.diners_total && resto.dinersInRestaurant == 0) {
+          imprimirConsulta(&memoriaCompartida);
+
+          if (resto.diners >= resto.diners_total && resto.dinersInRestaurant == 0) {
 
           Semaforo* semHosts = new Semaforo(FILE_RESTAURANT,KEY_SALIDA_HOSTS);
           Semaforo* semWaiters = new Semaforo(FILE_RESTAURANT,KEY_SALIDA_WAITERS);
@@ -194,16 +193,12 @@ int main(int argc, char** argv) {
 
           order_t order;
           order.salida = true;
+          order.type = 's';
           char data[sizeof(order_t)];
           serializador.serialize(&order,data);
 
           for (int i = 0; i < resto.waiters ; ++i) {
             orders.escribir(data, sizeof(order_t));
-            //std::cout << "wait waiter" << i << std::endl;
-            //semWaiters->wait();
-            //sleep(2);
-            //std::cout << "waited waiter" << i << std::endl;
-
           }
           orders.cerrar();
 

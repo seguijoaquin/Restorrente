@@ -1,7 +1,7 @@
 {
-  "hosts" : 3,
-  "waiters" : 3,
-  "tables" : 4,
+  "hosts" : 1,
+  "waiters" : 1,
+  "tables" : 1,
   "diners_total" : 10,
   "diners_arribados" : 25,
   "entrada" : [1,1,1,1],

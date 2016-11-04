@@ -44,6 +44,7 @@ void Waiter::run() {
     order = searchOrder();
 
     while (!order.salida) {
+      //std::cout << "Waiter " << getpid() << "recibe order: valid: " << order.valid << " salida: " << order.salida << " type: " << order.type << std::endl;
         if (order.valid) {
             //std::cout << "[Waiter:" << getpid() <<"] - Recibe order: " << "type: "<< order.type  <<" pid: " << order.pid << std::endl;
             if (order.type == 'd') {
@@ -65,7 +66,7 @@ void Waiter::run() {
         order = searchOrder();
     }
 
-    //std::cout << "Sale waiter " << getpid() << std::endl;
+    //std::cout << "Sale waiter " << getpid() << " con order: " << order.salida <<" " << order.valid << " "<< order.type << std::endl;
 
     this->semaforoSalidaWaiters->signal();
 
@@ -86,12 +87,18 @@ order_t Waiter::searchOrder() {
 
   //El primer waiter se clava aca
   ssize_t result = ordersFifo->leer(data, sizeof(order_t));
+  while (result <= 0) {
+    result = ordersFifo->leer(data,sizeof(order_t));
+  }
   ordersLock->liberarLock();
 
   serializador.deserialize(data,&order);
 
   if (result <= 0 ) {
+      //std::cout << "SEARCH ORDER ERROR con waiter " << getpid() << std::endl;
       order.valid = false;
+      //order.salida = false;
+      order.type = 'n';
   }
 
   return order;
@@ -99,7 +106,7 @@ order_t Waiter::searchOrder() {
 }
 
 void Waiter::requestOrder(order_t order) {
-  sleep(TAKE_ORDER_TIME);
+  //sleep(TAKE_ORDER_TIME);
   if (this->senal_corte_handler.luzPrendida()) {
 
     char data[sizeof(order_t)];
@@ -112,13 +119,14 @@ void Waiter::requestOrder(order_t order) {
   } else {
     stringstream ssDinerFifoName;
     ssDinerFifoName << DINERS_FIFO << order.pid;
+
     char response;
     Fifo dinerFifo(ssDinerFifoName.str());
     dinerFifo.abrir(O_WRONLY);
     response = NO_HAY_LUZ;
-    while (dinerFifo.escribir(&response, sizeof(char) != -1)) {
-      sleep(1);
-    }
+
+    //std::cout << "Estoy por escribir una respuesta de NO HAY LUZ al diner: " << order.pid << std::endl;
+    while (dinerFifo.escribir(&response, sizeof(char) == -1)) {}
     Logger::getInstance()->insert(KEY_WAITER, "Comunica que no hay luz al Diner: ", order.pid);
   }
 }
@@ -170,6 +178,7 @@ void Waiter::deliverOrder(order_t order) {
   } else {
     response = NO_HAY_LUZ;
     dinerFifo.escribir(&response, sizeof(char));
+    Logger::getInstance()->insert(KEY_WAITER, "Contesta que no hay luz al Diner: ", order.pid);
   }
 
 }

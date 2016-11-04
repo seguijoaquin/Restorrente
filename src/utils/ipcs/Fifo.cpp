@@ -47,7 +47,8 @@ ssize_t Fifo::escribir(char* dato, size_t datoSize) {
     ssize_t resultado = write(this->fileDes, (const void *) dato, datoSize);
 
     if (resultado == -1) {
-      std::string mensaje = std::string("Error en Fifo->leer(): ") + std::string(strerror(errno)) + std::string("\n");
+      std::cout << "Error en Fifo:"<< this->nombre <<"->escribir(): " << strerror(errno) << " en proceso [" << getpid() << "]" << std::endl;
+      //std::string mensaje = std::string("Error en Fifo->escribir(): ") + std::string(strerror(errno)) + std::string("\n");
       //throw mensaje;
     } else {
       //std::cout << "Escribo " << resultado << "bytes en fifo " << this->nombre << "con ps: "<< getpid() << std::endl;
@@ -60,23 +61,23 @@ ssize_t Fifo::escribir(char* dato, size_t datoSize) {
 
 ssize_t Fifo::leer(char* buffer, size_t buffSize) {
     ssize_t resultado = 0;
+
+    if (this->fileDes == -1) {
+      this->fileDes = open(this->nombre.c_str(), O_RDONLY);
+    }
+
     resultado = read(this->fileDes, (void *) buffer, buffSize);
 
-
     while (resultado == 0) {
-        /*if (this->fileDes == -1) {
-            this->fileDes = open(this->nombre.c_str(), O_RDONLY);
-        }
-        */
         resultado = read(this->fileDes, (void *) buffer, buffSize);
-      /*  if (resultado == 0) {
-            cerrar();
+        if (resultado == 0) {
+            //cerrar();
         }
-        */
     }
 
     if (resultado == -1) {
-      std::string mensaje = std::string("Error en Fifo->leer(): ") + std::string(strerror(errno)) + std::string("\n");
+      //std::string mensaje = std::string("Error en Fifo->leer(): ") + std::string(strerror(errno)) + std::string("\n");
+      std::cout << "Error en Fifo:" << this->nombre <<"->leer(): " << strerror(errno) << " en proceso [" << getpid() << "]" << std::endl;
       //throw mensaje;
     } else {
       //std::cout << "Leo " << resultado << "bytes en fifo " << this->nombre << "con ps: "<< getpid() << std::endl;

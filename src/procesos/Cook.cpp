@@ -35,8 +35,10 @@ void Cook::run() {
             cookOrder(order);
             sendOrder(order);
           } else {
-            if(order.valid) {              
+            if(order.valid) {
+              //Cuando se corta la luz, manda order.salida = true
               order.type = 'c';
+              //order.salida = false;
               char data[sizeof(order_t)];
               serializador.serialize(&order,data);
               ordersFifo->abrir(O_WRONLY);
@@ -60,6 +62,10 @@ order_t Cook::searchOrder() {
 
   //El cook se clava aca, esperando al Waiter
   ssize_t result = ordersToCookFifo->leer(data, sizeof(order_t));
+
+  while (result <= 0) {
+    result = ordersToCookFifo->leer(data, sizeof(order_t));
+  }
 
   serializador.deserialize(data,&order);
 
